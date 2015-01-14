@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -7,11 +5,4 @@ pom.xml.next
 release.properties
 
 mods/
-=======
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
->>>>>>> 23e8fe6256e1304ee1efb5349d336e50e173c96f
