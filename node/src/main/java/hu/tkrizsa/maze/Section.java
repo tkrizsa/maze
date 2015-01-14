@@ -22,6 +22,7 @@ public class Section {
 	private boolean loaded = false;
 	
 	private List<List<MapItem>> items;
+	private Map<String, Client> players = new HashMap<String, Client>();
 	
 
 	public Section(GameServer game, String key) {
@@ -48,16 +49,33 @@ public class Section {
 	}
 	
 
+	// player
 	
+	public void removePlayer(Client client) {
+		this.players.remove(client.getKey());
+		clientReplyMap();
+	}
+	
+	public void addPlayer(Client client) {
+		this.players.put(client.getKey(), client);
+		clientReplyMap();
+	}
+	
+	
+	// subscriptions 
 	public void clientAdd(Client client) {
 		clients.put(client.getKey(), client);
+	}
+	
+	public void clientRemove(Client client) {
+		clients.remove(client.getKey());
 	}
 	
 	public void clientReplyMap() {
 		JsonObject jresp = new JsonObject();
 		JsonObject jresp_sections = new JsonObject();
 		jresp.putObject("sections", jresp_sections);
-		jresp_sections.putObject(getKey(), getJson());
+		jresp_sections.putObject(getKey(), getJson(false));
 		for (Client client : clients.values()) {
 			client.write(jresp);
 		}
@@ -169,7 +187,7 @@ public class Section {
 	}
 	
 	
-	public JsonObject getJson() {
+	public JsonObject getJson(boolean forDB) {
 		Map<String,Integer> objects = new HashMap<String, Integer>();
 		JsonArray jobjects = new JsonArray();
 		
@@ -193,6 +211,20 @@ public class Section {
 		
 		jres.putArray("objects", jobjects);
 		jres.putArray("items", jitems);
+		
+		if (!forDB) {
+			JsonArray jplayers = new JsonArray();
+			for(Client client : players.values()) {
+				JsonObject jplayer = new JsonObject();
+				jplayer.putString("id", client.getPlayerId());
+				jplayer.putNumber("x", client.getPlayerX());
+				jplayer.putNumber("y", client.getPlayerY());
+				jplayers.addObject(jplayer);
+			}
+			jres.putArray("players", jplayers);
+		
+		}
+		
 		
 		return jres;
 	}

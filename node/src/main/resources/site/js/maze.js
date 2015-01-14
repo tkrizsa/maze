@@ -26,7 +26,7 @@ onmessage = function(event) {
 
 Maze = function(domSelector) {
 
-	this.playerId = 'user' + (Math.round(Math.random()*90000) + 10000);
+	this.playerId = 'player' + (Math.round(Math.random()*90000) + 10000);
 	this.servers = {};
 
 	// CREATE NOT UNIQUE OBJECT SINGLETONES
@@ -68,7 +68,11 @@ Maze = function(domSelector) {
 	this.map = new Maze.Map(this);
 	this.map.create();
 	
+	this.objs = new Array();
+
 	this.hero = new Maze.Obj.Hero(this);
+	this.hero.playerId = this.playerId;
+	this.objs.push(this.hero);
 	this.hero.jumpTo(this.map.levels[0], 5, 7);
 	
 	
@@ -98,15 +102,13 @@ Maze = function(domSelector) {
 	// pops
 	this.pop = new Maze.Pop.Main(this);
 	//new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.kick);	
-	new Maze.Pop.DrawMenu(this, this.pop);	
+	//new Maze.Pop.DrawMenu(this, this.pop);	
 	
 	
 	
 	
 	
 	
-	this.objs = new Array();
-	this.objs.push(this.hero);
 
 	/*
 	// create orks
@@ -373,6 +375,8 @@ Maze.Camera.prototype.render = function() {
 	for(var y = -viewRangeY; y <= viewRangeY; y++) {
 		for(var x = -viewRangeX; x <= +viewRangeX; x++) {
 			var item = this.level.itemAt(x + this.centerTileX, y + this.centerTileY);
+			
+			
 			while (item) {
 				var ox = 0;
 				var oy = 0;
@@ -396,10 +400,50 @@ Maze.Camera.prototype.render = function() {
 					});
 				} else {
 					item.obj.trigger('drawIt', this, left, top);
+					
+					// SECTION BORDER
+					var xx = (x + this.centerTileX) % 16;
+					var yy = (y + this.centerTileY) % 16;
+					if (xx==0 || xx == Maze.SECTION_SIZE - 1 || yy == 0 || yy == Maze.SECTION_SIZE - 1) {
+						ctx.lineWidth= 1;
+						ctx.strokeStyle = 'rgba(0,0,0,1.0)';
+					}
+					if (xx == 0) {
+						ctx.beginPath();
+						ctx.moveTo(left, top);
+						ctx.lineTo(left, top + this.TILE_HEIGHT);
+						ctx.closePath();
+						ctx.stroke();						
+					}
+					if (xx == Maze.SECTION_SIZE - 1) {
+						ctx.beginPath();
+						ctx.moveTo(left + this.TILE_WIDTH - 1, top);
+						ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
+						ctx.closePath();
+						ctx.stroke();						
+					}
+					if (yy == 0) {
+						ctx.beginPath();
+						ctx.moveTo(left, top);
+						ctx.lineTo(left + this.TILE_WIDTH, top);
+						ctx.closePath();
+						ctx.stroke();						
+					}
+					if (yy == Maze.SECTION_SIZE - 1) {
+						ctx.beginPath();
+						ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
+						ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
+						ctx.closePath();
+						ctx.stroke();						
+					}
+					
 				}
 				
 				item = item.next;
 			}
+			
+			
+			
 		} // x
 	} // y
 
@@ -605,8 +649,8 @@ Maze.prototype.drawObject = function(mouse) {
 
 Maze.prototype.drawTerrainCorrect = function(level, terrainClass) {
 	var objs = this[terrainClass.toUpperCase()];
-	for (var section_key in level.sections) {
-		var section = level.sections[section_key];
+	for (var section_key in this.map.subscribedSections) {
+		var section = this.map.subscribedSections[section_key];
 		for (var sy = 0; sy < section.tileHeight; sy++) {
 			for (var sx = 0; sx < section.tileWidth; sx++) {
 			

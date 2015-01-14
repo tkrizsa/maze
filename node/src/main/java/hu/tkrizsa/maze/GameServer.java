@@ -52,6 +52,7 @@ public class GameServer {
 	}
 	
 	public void clientRemove(Client client) {
+		client.remove();
 		clients.remove(client.getKey());
 	}
 	
@@ -93,15 +94,26 @@ public class GameServer {
 			client.error("no player id.");
 			return;
 		}
+		
 		client.playerId = playerId;
-		JsonObject jpos = jplayer.getObject("pos");
+		JsonObject jpos = msg.getObject("playerPos");
 		if (jpos != null) {
 			int x, y;
 			x = jpos.getInteger("x");
 			y = jpos.getInteger("y");
-			client.setPos(x, y);
+			
+			String key = jpos.getString("key");
+			Section section = sectionGet(key);
+			
+			client.setPlayer(section, x, y);
+		} else {
+			client.removePlayer();
 		}
 		
+		
+		
+		// ======================= handle section subscriptions ========================
+		Map<String, Section> newSections = new HashMap<String, Section>();
 		JsonArray jsections = msg.getArray("sections");
 		if (jsections != null) {
 			for (int i = 0; i < jsections.size(); i++) {
@@ -115,15 +127,17 @@ public class GameServer {
 				
 				section.clientAdd(client);
 				client.sectionAdd(section);
+				newSections.put(key, section);
 			
 				if (section.isLoaded()) {
-					jresp_sections.putObject(section.getKey(), section.getJson());
+					jresp_sections.putObject(section.getKey(), section.getJson(false));
 				}
 			}
-		
-		
 		}
-	
+		client.sectionUnsubscribe(newSections);
+		
+		
+		// answer with already loaded section's infos
 		client.write(jresp);
 	}
 
@@ -167,7 +181,7 @@ public class GameServer {
 		req.putString("statement", "INSERT INTO maze.sections (key, map) VALUES (?, ?)");
 		JsonArray v0 = new JsonArray();
 		v0.addString(section.getKey());
-		v0.addString(section.getJson().toString());
+		v0.addString(section.getJson(true).toString());
 		JsonArray values = new JsonArray();
 		values.addArray(v0);
 		req.putArray("values", values);
