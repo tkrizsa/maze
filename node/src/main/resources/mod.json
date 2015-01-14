@@ -1,0 +1,6 @@
+{
+	"main" : "hu.tkrizsa.maze.NodeMain",
+	"auto-redeploy" : true,
+	"includes" : "io.vertx~mod-web-server~2.0.0-final"
+ 
+}
