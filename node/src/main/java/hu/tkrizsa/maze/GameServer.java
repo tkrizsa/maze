@@ -37,6 +37,10 @@ public class GameServer {
 	final Map<String, Client> clients = new HashMap<String, Client>();
 	final Map<String, Section> sections = new HashMap<String, Section>();
 	
+	// holds player who's disconnected and away from a section
+	// only purpose to remove from section's away list if comes fast back here
+	final Map<String, String> awayPlayers = new HashMap<String, String>(); // playerId -> sectionKey
+	
 	public final static int SECTION_SIZE = 16;
 
 	public GameServer(EventBus eventBus) {
@@ -52,7 +56,7 @@ public class GameServer {
 	}
 	
 	public void clientRemove(Client client) {
-		client.remove();
+		client.disconnected();
 		clients.remove(client.getKey());
 	}
 	
@@ -79,25 +83,42 @@ public class GameServer {
 
 	public void clientMessageInit(Client client, JsonObject msg) {
 	
-		JsonObject jresp = new JsonObject();
-		JsonObject jresp_sections = new JsonObject();
-		jresp.putObject("sections", jresp_sections);
+
 	
+		// Handle playerId. required!
 		JsonObject jplayer = msg.getObject("player");
 		if (jplayer == null) {
 			client.error("player is null");
 			return;
 		}
-		
 		String playerId = jplayer.getString("id");
 		if (playerId == null || "".equals("playerId")) {
 			client.error("no player id.");
 			return;
 		}
 		
-		client.playerId = playerId;
+		if (client.playerId == null) {
+			client.playerId = playerId;
+			
+			// if we just get a new playerId, check disconnected players, and remove this
+			String ask = awayPlayers.get(playerId); // disconnected section key
+			if (ask != null) {
+				awayPlayers.remove(playerId);
+				
+				// if section, where player away from is here yet, remove from it's awayPlayer list too.
+				Section asec = sections.get(ask);
+				if (asec != null) {
+					asec.removeAway(playerId);
+				}
+			}
+		}
+		
+		
+		// Handle player position. Not required!
+		// if not present : he walks on a section of an other server, but he has subscibed section on this server
 		JsonObject jpos = msg.getObject("playerPos");
 		if (jpos != null) {
+			// walks on this server 
 			int x, y;
 			x = jpos.getInteger("x");
 			y = jpos.getInteger("y");
@@ -107,38 +128,63 @@ public class GameServer {
 			
 			client.setPlayer(section, x, y);
 		} else {
-			client.removePlayer();
+			client.disconnectedAsPlayer();
 		}
 		
 		
 		
 		// ======================= handle section subscriptions ========================
+		
+		// a list of newly subscribed sections. we use this list to unsubscribe every section, what's not in it.
 		Map<String, Section> newSections = new HashMap<String, Section>();
-		JsonArray jsections = msg.getArray("sections");
+
+		
+		JsonArray jsections = msg.getArray("subscribe");
 		if (jsections != null) {
+			// prepare answer for already loaded sections
+			JsonObject jresp = new JsonObject();
+			jresp.putString("cmd", "init");
+			JsonObject jresp_sections = new JsonObject();
+			jresp.putObject("sections", jresp_sections);		
+		
+		
+		
 			for (int i = 0; i < jsections.size(); i++) {
-				Object okey = jsections.get(i);
-				if (okey == null) {
+				JsonObject jsection = jsections.get(i);
+				String key = jsection.getString("key");
+				if (key == null) {
 					client.error("section key is null.");
 					return;
 				}
-				String key = okey.toString();
+				Boolean mapNeeded = jsection.getBoolean("mapNeeded");
+				
 				Section section = sectionGet(key);
 				
 				section.clientAdd(client);
 				client.sectionAdd(section);
+				
 				newSections.put(key, section);
 			
-				if (section.isLoaded()) {
-					jresp_sections.putObject(section.getKey(), section.getJson(false));
+				// if map needed, we return section map inmediately when already loaded
+				if (mapNeeded != null && mapNeeded == true) {
+					if (section.isLoaded()) {
+						jresp_sections.putObject(section.getKey(), section.getJson(false, true));
+					} else {
+						// if map not loaded, after load it will be sent for every subscribed client
+					}
 				}
 			}
+			
+			// unsubscribe from section not in the just sent list.
+			client.sectionUnsubscribe(newSections);
+			
+			// answer with already loaded section's infos
+			if (jresp_sections.size() > 0)
+				client.write(jresp);
 		}
-		client.sectionUnsubscribe(newSections);
 		
 		
-		// answer with already loaded section's infos
-		client.write(jresp);
+		
 	}
 
 	public void clientMessageDraw(Client client, JsonObject msg) {
@@ -181,7 +227,7 @@ public class GameServer {
 		req.putString("statement", "INSERT INTO maze.sections (key, map) VALUES (?, ?)");
 		JsonArray v0 = new JsonArray();
 		v0.addString(section.getKey());
-		v0.addString(section.getJson(true).toString());
+		v0.addString(section.getJson(true, false).toString());
 		JsonArray values = new JsonArray();
 		values.addArray(v0);
 		req.putArray("values", values);

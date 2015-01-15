@@ -65,6 +65,7 @@ Maze.Obj.Walker.extend = function(obj) {
 	obj.getMove			= Maze.Obj.Walker.getMove;
 	obj.getNeighbours   = Maze.Obj.Walker.getNeighbours;
 	obj.blurFollow   	= Maze.Obj.Walker.blurFollow;
+	obj.remove 		  	= Maze.Obj.Walker.remove;
 	
 	
 	obj.bind('stepIt', obj.walkerStepIt);
@@ -79,6 +80,11 @@ Maze.Obj.Walker.blurFollow = function() {
 	this.blur.tileX = this.tileX;
 	this.blur.tileY = this.tileY;
 	this.blur.level.addObject(this.blur);
+}
+
+Maze.Obj.Walker.remove = function() {
+	this.level.removeObject(this);
+	this.blur.level.removeObject(this.blur);
 }
 
 Maze.Obj.Walker.jumpTo = function(level, tileX, tileY) {
@@ -112,6 +118,8 @@ Maze.Obj.Walker.walkTo = function(tileX, tileY) {
 }
 
 Maze.Obj.Walker.walkerStepIt = function() {
+	if (!this.level)
+		return;
 
 	if (this.offsetSize > 0.0) {
 		this.offsetSize = 1.0 - ((this.maze.timeNow - this.lastStep) / (this.speed * 1000));

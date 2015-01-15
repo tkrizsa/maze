@@ -42,27 +42,35 @@ public class Client {
 		write(jobj);
 	}
 	
-	public void remove() {
+	public void disconnected() {
 		for (Section section : sections.values()) {
 			section.clientRemove(this);
 		}
 		sections = null;
-		if (playerSection != null) {
-			playerSection.removePlayer(this);
-			playerSection = null;
-		
-		}
-	
+		disconnectedAsPlayer();
 	}
+
+	// called when still connected, but without playerPos = walks on other server
+	// or from dissconnect
+	public void disconnectedAsPlayer() {
+		if (playerSection != null) {
+			playerSection.disconnectPlayer(this);
+			playerSection = null;
+		}
+	}
+	
 	
 	
 	// PLAYER
 	public void setPlayer(Section section, int x, int y) {
+		System.out.println("-> setplayer");
 		if (section != playerSection) {
 			if (playerSection != null) {
-				playerSection.removePlayer(this);
+				playerSection.removePlayer(this, new PlayerPos(section.getKey(), x, y));
 			}
 			playerSection = section;
+			playerX = x;
+			playerY = y;
 			playerSection.addPlayer(this);
 		} else {
 			if (playerX != x || playerY != y) {
@@ -73,13 +81,13 @@ public class Client {
 		}
 	}
 	
-	public void removePlayer() {
+	/*public void removePlayer() {
 		if (playerSection != null)
 			playerSection.removePlayer(this);
 		playerSection = null;
 		playerX = 0;
 		playerY = 0;
-	}
+	}*/
 	
 	public int getPlayerX() {
 		return playerX;

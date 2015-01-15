@@ -73,10 +73,9 @@ Maze = function(domSelector) {
 	this.hero = new Maze.Obj.Hero(this);
 	this.hero.playerId = this.playerId;
 	this.objs.push(this.hero);
-	this.hero.jumpTo(this.map.levels[0], 5, 7);
+	this.heroPlaced = false;
 	
 	
-	this.camera.level = this.map.levels[0];
 	this.camera.follow = this.hero;
 	
 	this.timeLast = new Date().getTime();
@@ -101,7 +100,7 @@ Maze = function(domSelector) {
 		
 	// pops
 	this.pop = new Maze.Pop.Main(this);
-	//new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.kick);	
+	new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.step);	
 	//new Maze.Pop.DrawMenu(this, this.pop);	
 	
 	
@@ -224,7 +223,6 @@ Maze.prototype.mouseClick = function(mouse) {
 // ======================================== CAMERA =====================================
 Maze.Camera = function(maze) {
 	this.maze = maze;
-	this.level = null;
 	
 	this.images = {};
 	
@@ -312,6 +310,8 @@ Maze.Camera.prototype.render = function() {
 	// reset mouseHover
 	this.setMouseHover(false, null);
 
+	if (!this.follow || !this.follow.level)
+		return;
 
 	if (this.follow) {
 		this.centerTileX = this.follow.tileX;
@@ -340,7 +340,7 @@ Maze.Camera.prototype.render = function() {
 		var selectedTileX = Math.floor((this.mouseX - canvasMidX + this.centerOffsetX) / this.TILE_WIDTH) + this.centerTileX;
 		var selectedTileY = Math.floor((this.mouseY - canvasMidY + this.centerOffsetY) / this.TILE_HEIGHT) + this.centerTileY;
 	
-		var item = this.level.itemAt(selectedTileX, selectedTileY);
+		var item = this.follow.level.itemAt(selectedTileX, selectedTileY);
 		var selTile = false;
 		var selSelectable = false;
 		var selBlur = false;
@@ -374,7 +374,7 @@ Maze.Camera.prototype.render = function() {
 	
 	for(var y = -viewRangeY; y <= viewRangeY; y++) {
 		for(var x = -viewRangeX; x <= +viewRangeX; x++) {
-			var item = this.level.itemAt(x + this.centerTileX, y + this.centerTileY);
+			var item = this.follow.level.itemAt(x + this.centerTileX, y + this.centerTileY);
 			
 			
 			while (item) {

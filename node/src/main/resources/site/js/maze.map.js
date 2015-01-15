@@ -3,15 +3,17 @@ Maze.SECTION_SIZE = 16;
 
 Maze.Map = function(maze) {
 	this.maze = maze;
-	this.FLOOR 		= maze.GRASSFLOOR;
+	
+	/*this.FLOOR 		= maze.GRASSFLOOR;
 	this.FLOOR2 	= maze.TILEFLOOR1;
 	this.WALL  		= maze.BRICKWALL1;
 	this.TREE1  	= maze.TREE1;
-	this.TREE2  	= maze.TREE2;
+	this.TREE2  	= maze.TREE2;*/
 	
 	this.servers = {};		// list of servers referenced by url
 	this.subscribedSections = {};
 	this.currPlayerServer = false;
+	this.levels = new Array();
 }
 
 // MAPITEM
@@ -24,10 +26,10 @@ Maze.Map.MapItem = function(obj, next) {
 
 
 Maze.Map.prototype.create = function() {
-	this.levels = new Array();
+	
 	this.levels[0] = new Maze.Map.Level(this, 30, 30);
 
-	var mapData = $('#mapdata').val();
+	//var mapData = $('#mapdata').val();
 	//this.levels[0].deSerialize(mapData);
 	
 	
@@ -51,15 +53,28 @@ Maze.Map.prototype.serverSubscribe = function(section) {
 	section.server = server;
 }
 
+Maze.Map.prototype.getSectionKeyByObj = function(obj) {
+	var x = Math.floor(obj.aimTileX / 16);
+	var y = Math.floor(obj.aimTileY / 16);
+	return x + "_" + y;
+}
+
+
 Maze.Map.prototype.stepIt = function() {
 	var newSubscribedSections = {};
 	
 	if (!this.maze.camera || !this.maze.camera.follow)
 		return;
 
-	var currSecX = Math.floor(this.maze.camera.follow.tileX / Maze.SECTION_SIZE);
-	var currSecY = Math.floor(this.maze.camera.follow.tileY / Maze.SECTION_SIZE);
+	var currSecX = Math.floor(this.maze.camera.follow.aimTileX / Maze.SECTION_SIZE);
+	var currSecY = Math.floor(this.maze.camera.follow.aimTileY / Maze.SECTION_SIZE);
 	var currLevel = this.maze.camera.follow.level;
+	
+	if (!currLevel) {
+		currLevel = this.levels[0]; // temporary!!!!!!!
+		currSecX = 0;
+		currSecY = 0;
+	}
 
 	for (var y = -1; y<=1; y++) {
 		for (var x = -1; x<=1; x++) {
@@ -77,6 +92,18 @@ Maze.Map.prototype.stepIt = function() {
 		var section = this.subscribedSections[key];
 		var server = section.server;
 		server.sectionRemove(section);
+		// remove users from this section
+		for (var i in this.maze.objs) {
+			var obj = this.maze.objs[i];
+			if (obj == this.maze.hero)
+				continue;
+			var okey = this.getSectionKeyByObj(obj);
+			if (okey == key) {
+				delete this.maze.objs[i];
+			}
+		
+		}
+		
 	}
 	
 	// add new sections
@@ -96,10 +123,10 @@ Maze.Map.prototype.stepIt = function() {
 	
 	
 	// set player pos
-	var newPlayerSecKey = currSecX + "_" + currSecY;
+	var newPlayerSecKey = this.getSectionKeyByObj(this.maze.hero);
 	var newPlayerSection = this.subscribedSections[newPlayerSecKey];
-	var newPlayerX = this.maze.camera.follow.aimTileX;
-	var newPlayerY = this.maze.camera.follow.aimTileY;
+	var newPlayerX = this.maze.hero.aimTileX;
+	var newPlayerY = this.maze.hero.aimTileY;
 	var newPlayerServer = newPlayerSection.server;
 	
 	if (this.currPlayerServer != newPlayerServer) {
@@ -119,10 +146,6 @@ Maze.Map.prototype.stepIt = function() {
 /* ============================================ SERVER ========================================= */
 
 
-Maze.SERVER_ERROR = -1;
-Maze.SERVER_OK = 0;
-Maze.SERVER_INVALID = 1;
-Maze.SERVER_SUBSCRIPTION_SENT = 2;
 
 Maze.Server = function(maze, map, url) {
 	var thisServer = this;
@@ -130,11 +153,18 @@ Maze.Server = function(maze, map, url) {
 	this.maze = maze;
 	this.map = map;
 	this.url = url;
+	
+	// last sent player status
 	this.playerKey = false;
 	this.playerX = false;
 	this.playerY = false;
+	// if player status sent to server
+	this.playerStatusSent = true;
+	
+	// current subscribed sections
 	this.sections = {};
-	this.status = Maze.SERVER_OK;
+	// if sections are sent to server
+	this.sectionStatusSent = true;
 	
 	this.sock = new SockJS(url);
 	this.sock.onopen = function() {
@@ -155,44 +185,42 @@ Maze.Server = function(maze, map, url) {
 	};
 	this.sock.onclose = function() {
 		console.log('close');
-	};
-	
-	/*function send(message) {
-		if (sock.readyState === SockJS.OPEN) {
-			console.log("sending message")
-		sock.send(message);
-	} else {
-		console.log("The socket is not open.");
-	}
-	}
-	function xclose() {
-	sock.close();
-	}*/
-	
-	
+	};	
 }
 
 Maze.Server.prototype.processResponse = function(data) {
 	console.log("SERVER RESPONSE : ");
 	console.log(data);
+	
 	for (var rsection_key in data.sections) {
-		console.log(rsection_key);
 		var section = this.map.subscribedSections[rsection_key];
 		if (!section) {
-			console.log("-> not here.");
+			console.log("section '" + rsection_key + "' not here.");
 			continue;
 		}
 		// if (section.loaded)
 			// continue;
 		var rsection = data.sections[rsection_key];
-		section.deSerialize(rsection);
-		section.loaded = true;
 		
-		if (rsection.players) { 
+		
+		// If server sent back the item map of section, load it
+		if (rsection.objects && rsection.items) {
+			section.deSerialize(rsection);
+			section.loaded = true;
+		}
+		
+		
+		// If server sent the players of the section : 
+		if (rsection.players) {
 			for (var i in rsection.players) {
 				var rplayer = rsection.players[i];
-				if (rplayer.id == this.maze.playerId)
+				if (rplayer.id == this.maze.playerId) {
+					if (!this.maze.heroPlaced) {
+						this.maze.heroPlaced = true;
+						this.maze.hero.jumpTo(section.level, 5, 5);
+					}
 					continue;
+				}
 				var player = false;
 				for (var j in this.maze.objs) {
 					if (this.maze.objs[j].playerId == rplayer.id) {
@@ -202,16 +230,48 @@ Maze.Server.prototype.processResponse = function(data) {
 				}
 				if (player) {
 					player.walkTo(rplayer.x, rplayer.y);
-					console.log("player wokkk:" + player.aimTileX);
 				} else {
 					player = new Maze.Obj.Hero(this.maze);
 					this.maze.objs.push(player);
 					player.playerId = rplayer.id;
 					player.jumpTo(section.level, rplayer.x, rplayer.y);
 				}
-			
 			}
-			
+		}
+		
+		// If server sent away players from this section, remove them if exists here
+		if (rsection.away) {
+			for (var i in rsection.away) {
+				var away = rsection.away[i];
+				var playerId = away.id;
+				
+				// dont care if i reported disconnected
+				if (playerId == this.maze.playerId)
+					continue; 
+				// dont care if we are subscribed the section where he is away (we'll handle it in that section)
+				if (away.key && this.map.subscribedSections[away.key])
+					continue;
+					
+				// look for player by id
+				var player = false;
+				for (var j in this.maze.objs) {
+					if (this.maze.objs[j].playerId == playerId) {
+						player = this.maze.objs[j];
+						break;
+					}
+				}
+				
+				// if player found remove it.
+				if (player) {
+					pckey = this.map.getSectionKeyByObj(player);
+					// we get rid of him only when he is in this section 
+					if (pckey == section.getKey()) {
+						player.remove();
+						delete this.maze.objs[j];
+					}
+				} 
+			}
+		
 		
 		
 		}
@@ -226,7 +286,7 @@ Maze.Server.prototype.playerSet = function(key, x, y) {
 	this.playerKey = key;
 	this.playerX = x;
 	this.playerY = y;
-	this.status = Maze.SERVER_INVALID;
+	this.playerStatusSent = false;
 }
 
 Maze.Server.prototype.playerRemove = function() {
@@ -235,37 +295,33 @@ Maze.Server.prototype.playerRemove = function() {
 	this.playerKey = false;
 	this.playerX = false;
 	this.playerY = false;
-	this.status = Maze.SERVER_INVALID;
+	this.playerStatusSent = false;
 }
 
 Maze.Server.prototype.sectionAdd = function(section) {
 	this.sections[section.getKey()] = section;
-	this.status = Maze.SERVER_INVALID;
+	this.sectionStatusSent = false;
 }
 
 Maze.Server.prototype.sectionRemove = function(section) {
 	delete this.sections[section.getKey()];
-	this.status = Maze.SERVER_INVALID;
+	this.sectionStatusSent = false;
 }
 
 Maze.Server.prototype.stepIt = function() {
-	if (this.status == Maze.SERVER_OK)
-		return;
-	if (this.status == Maze.SERVER_SUBSCRIPTION_SENT)
+	if (this.playerStatusSent && this.sectionStatusSent)
 		return;
 		
 	if (this.sock.readyState !== SockJS.OPEN)
 		return;
 		
-	this.status = Maze.SERVER_SUBSCRIPTION_SENT;
-		
 	var msg = {
 		cmd : 'init',
-		sections : [],
 		player : {
 			id : this.maze.playerId
 		}
 	};
+
 	
 	if (this.playerKey !== false) {
 		msg.playerPos = {
@@ -273,20 +329,28 @@ Maze.Server.prototype.stepIt = function() {
 			x : this.playerX,
 			y : this.playerY
 		}
-	
 	}
 	
-	console.log("SEND SUBSCRIPT : " );
 	
-	for (var key in this.sections) {
-		msg.sections.push(key);
-		console.log(key);
+	if (!this.sectionStatusSent) {
+		msg.subscribe = new Array();
+		for (var key in this.sections) {
+			var section = this.sections[key];
+			var x = {key : key};
+			if (!section.loaded) {
+				x.mapNeeded = true;
+			}
+			msg.subscribe.push(x);
+		}
 	}
 	
-	console.log("-----");
 		
+	console.log("SENT TO SERVER");
+	console.log(msg);
 	this.sock.send(JSON.stringify(msg));
 
+	this.playerStatusSent = true;
+	this.sectionStatusSent = true;
 }
 
 
@@ -530,8 +594,6 @@ Maze.Map.Section.prototype.hasClass2 = function(objClass, x, y, borderIsOk) {
 
 /* ==================================================== EXPORT / IMPORT ================================================ */
 Maze.Map.Section.prototype.deSerialize = function(result) {
-	//var result = JSON.parse(mapData);
-
 	var saveObjects = [];
 	for (var y = 0; y < this.tileHeight; y++) {
 		for (var x = 0; x < this.tileWidth; x++) {

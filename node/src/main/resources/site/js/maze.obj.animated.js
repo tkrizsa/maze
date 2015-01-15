@@ -476,11 +476,11 @@ Maze.Obj.Animated.init = function() {
 	this.addPoint(1,	0.4,	0.25,	+0.0, 0.0, 'shoulder left');  	//10  : shouler left
 	this.addPoint(1,	0.4,	-0.25,	+0.0, 0.0, 'shoulder right');  	//11  : shouler right
 
-	this.addPoint(10,	this.armLength,	+0.25,	+0.0, 0.0, 'upper arm left');  	//12  : upper arm left 0.1 volt!!!!
+	this.addPoint(10,	this.armLength,	+0.25,	+0.0, 0.0, 'upper arm left');  		//12  : upper arm left 
 	this.addPoint(11,	this.armLength,	-0.25,	-0.0, 0.0, 'upper arm right');  	//13  : upper arm right
 
-	this.addPoint(12,	this.armLength,	-0.2,	+0.25, 0.0, 'lower arm left');  	//14  : lower arm left
-	this.addPoint(13,	this.armLength,	-0.2,	+0.25, 0.0, 'lower arm right');  	//15  : lower arm right
+	this.addPoint(12,	this.armLength,	-0.05,	+0.25, 0.0, 'lower arm left');  	//14  : lower arm left
+	this.addPoint(13,	this.armLength,	-0.05,	+0.25, 0.0, 'lower arm right');  	//15  : lower arm right  alpha -0.2 volt karddal!
 	
 	this.addPoint(1,	this.neckLength,	0.03,	-0.25, 0.0, 'head center');  	//16  : head center
 	
@@ -534,6 +534,7 @@ Maze.Obj.Animated.init = function() {
 	
 	this.addCircle(16, this.headRad, this.headColor);
 
+	
 	this.addLine(15,17); // sword
 	this.parts[17].strokeStyle = this.swordColor;
 
@@ -594,8 +595,10 @@ Maze.Obj.Animated.init = function() {
 		22 : {alpha : -rope2, beta : -0.00, gamma : 0.0},
 		4 : {beta : -0.12},
 		5 : {beta : -0.16},
-		10 : {beta : -0.1},
-		11 : {beta : -0.1}
+		10 : {beta : -0.06},
+		11 : {beta : -0.06},
+		12 : {alpha : 0.0, beta : 0.12, gamma : 0.0},
+		13 : {alpha : 0.0, beta :  0.08, gamma : 0.0}
 	};
 	
 	this.poses['step2'].points = {
@@ -605,8 +608,10 @@ Maze.Obj.Animated.init = function() {
 		22 : {alpha : -rope2, beta : -0.00},
 		4 : {beta : +0.16},
 		5 : {beta : +0.12},
-		10 : {beta : +0.1},
-		11 : {beta : +0.1}
+		10 : {beta : +0.06},
+		11 : {beta : +0.06},
+		12 : {alpha : 0.0, beta : -0.08, gamma : 0.0},
+		13 : {alpha : 0.0, beta :  -0.12, gamma : 0.0}
 	};
 	
 	this.poses['stepOne'].y = 0.5;

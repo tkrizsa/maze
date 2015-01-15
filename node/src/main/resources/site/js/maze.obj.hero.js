@@ -1,6 +1,7 @@
 // ===================================== HERO ======================================
 Maze.Obj.Hero = function(maze) {
 	Maze.Obj.extend(this);
+	this.ancestors.hero = true;
 	this.className = 'Hero';
 	this.mapPart = false;
 	
@@ -17,10 +18,10 @@ Maze.Obj.Hero = function(maze) {
 	this.bootColor = '#cccc99';	
 	this.init();
 	
-	var c = 'rgba(140, 30, 30, 0.9)';
+	/*var c = 'rgba(140, 30, 30, 0.9)';
 	var c = 'rgba(94, 24, 54, 0.9)';
 	this.addRectangle(10, 11, 20, 19, c); // robe
-	this.addRectangle(19, 20, 22, 21, c); // robe
+	this.addRectangle(19, 20, 22, 21, c); // robe*/
 	
 	this.audio = {};
 	this.audio.footstep = new Audio("audio/footstep2.mp3"); 
