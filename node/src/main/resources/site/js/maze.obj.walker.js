@@ -29,13 +29,14 @@ Maze.Obj.Blur.prototype.blurDrawIt = function(cam, left, top) {
 }
 
 
-Maze.Obj.Walker = {};
-
 // ================================================================ WALKER =================================================
+
+Maze.Obj.Walker = {};
 Maze.Obj.Walker.extend = function(obj) {
 	obj.ancestors.walker = true;
 	
 	obj.walking 		= false;
+	obj.aimObject 		= null;
 	obj.aimTileX 		= obj.tileX;
 	obj.aimTileY 		= obj.tileY;
 	obj.offsetX 		= 0.0;
@@ -54,6 +55,7 @@ Maze.Obj.Walker.extend = function(obj) {
 	
 	obj.jumpTo 			= Maze.Obj.Walker.jumpTo;
 	obj.walkTo 			= Maze.Obj.Walker.walkTo;
+	obj.walkToObj		= Maze.Obj.Walker.walkToObj;
 	obj.walkerStepIt 	= Maze.Obj.Walker.walkerStepIt;
 	obj.stopWalk 		= Maze.Obj.Walker.stopWalk;
 	obj.cancelWalk 		= Maze.Obj.Walker.cancelWalk;
@@ -118,6 +120,12 @@ Maze.Obj.Walker.walkTo = function(tileX, tileY) {
 	this.aimObject = null;
 }
 
+Maze.Obj.Walker.walkToObj = function(obj) {
+	this.aimTileX = obj.tileX;
+	this.aimTileY = obj.tileY;
+	this.aimObject = obj;
+}
+
 Maze.Obj.Walker.walkerStepIt = function() {
 	if (!this.plain)
 		return;
@@ -176,6 +184,7 @@ Maze.Obj.Walker.walkerStepIt = function() {
 		}
 		
 		this.dir = 0;
+		
 				if (newX == this.tileX + 1	&& newY == this.tileY + 1) {this.dir = 1;}
 		else 	if (newX == this.tileX + 1	&& newY == this.tileY + 0) {this.dir = 2;}
 		else 	if (newX == this.tileX + 1	&& newY == this.tileY - 1) {this.dir = 3;}
@@ -197,7 +206,32 @@ Maze.Obj.Walker.walkerStepIt = function() {
 		
 		
 	} else {
-		this.stopWalk();
+		if (this.walking) {
+			var aim = this.aimObject;
+			var aimOk = this.aimObject && this.tileX == this.aimObject.tileX && this.tileY == this.aimObject.tileY;
+			this.stopWalk();
+			if (aimOk) {
+				
+				if (aim.is("gate")) {
+					if (this == this.maze.hero) {
+				
+						this.maze.playerRecord.plainId = aim.targetPlainId;
+						this.maze.playerRecord.sectionX = Math.floor(aim.targetX / 16);
+						this.maze.playerRecord.sectionY = Math.floor(aim.targetY / 16);
+						this.maze.playerRecord.sectionKey = this.maze.playerRecord.plainId + '#' + this.maze.playerRecord.sectionX + "#" + this.maze.playerRecord.sectionY;
+						this.maze.playerRecord.x = aim.targetX;
+						this.maze.playerRecord.y = aim.targetY;
+					
+						this.maze.heroPlaced = false;
+						this.plain = null;
+					}
+				
+				
+				
+				}
+				
+			}
+		}
 	}
 }
 

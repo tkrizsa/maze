@@ -34,7 +34,9 @@ Maze.prototype.serversStepIt = function() {
 	var currSecY = Math.floor(this.camera.follow.tileY / this.SECTION_SIZE);
 	var currPlain = this.camera.follow.plain;
 	
-	if (!currPlain) {
+	if (!this.heroPlaced) {
+		if (!this.plains[this.playerRecord.plainId])
+			this.plains[this.playerRecord.plainId] = new Maze.Plain(this, this.playerRecord.plainId);
 		currPlain = this.plains[this.playerRecord.plainId]; // temporary!!!!!!!
 		currSecX = this.playerRecord.sectionX;
 		currSecY = this.playerRecord.sectionY;
@@ -196,8 +198,13 @@ Maze.Server.prototype.processResponse = function(data) {
 					this.maze.objs.push(player);
 					player.playerId = rplayer.id;
 					if (!isNewSection && rplayer.fromKey) {
-						player.jumpTo(section.plain, rplayer.fromX, rplayer.fromY);
-						player.walkTo(rplayer.x, rplayer.y);
+						var fromPlainId = rplayer.fromKey.split("#")[0];
+						if (fromPlainId == section.plain.plainId) {
+							player.jumpTo(section.plain, rplayer.fromX, rplayer.fromY);
+							player.walkTo(rplayer.x, rplayer.y);
+						} else {
+							player.jumpTo(section.plain, rplayer.x, rplayer.y);
+						}
 					} else {
 						player.jumpTo(section.plain, rplayer.x, rplayer.y);
 					}
@@ -228,10 +235,13 @@ Maze.Server.prototype.processResponse = function(data) {
 					if (pckey == section.getKey()) {
 						if (away.key) {
 							// if we knows where he left, make him walk away
-							player.away = true;
-							player.walkTo(away.x, away.y);
-						
-						
+							var awayPlainId = away.key.split("#")[0];
+							if (awayPlainId == section.plain.plainId) {
+								player.away = true;
+								player.walkTo(away.x, away.y);
+							} else {
+								player.remove();
+							}
 						} else {
 							player.remove();
 						}
@@ -250,6 +260,14 @@ Maze.Server.prototype.processResponse = function(data) {
 		var section = this.maze.subscribedSections[this.maze.playerRecord.sectionKey]
 		this.maze.hero.jumpTo(section.plain, this.maze.playerRecord.x, this.maze.playerRecord.y);
 		this.maze.heroPlaced = true;
+		
+		if (section.plain.plainId == 'earth') {
+			var gate = new Maze.Obj.Gate(this.maze, 'moon', 2, 3);
+			gate.placeTo(section.plain, -14, 2);
+		} else {
+			var gate = new Maze.Obj.Gate(this.maze, 'earth', -14, 3);
+			gate.placeTo(section.plain, 2, 2);
+		}
 		
 		
 	}

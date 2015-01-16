@@ -57,7 +57,7 @@ Maze = function(domSelector) {
 	this.subscribedSections = {};		// list of subscribed sections referenced by sectionKey
 	this.currPlayerServer = false;
 	this.plains = {};					// list of plains referenced by plainId
-	this.plains[this.playerRecord.plainId] = new Maze.Plain(this, this.playerRecord.plainId);
+	
 	
 	
 	this.objs = new Array();
@@ -203,7 +203,12 @@ Maze.prototype.mouseClick = function(mouse) {
 			// mouse.obj.mouseActive = true;
 			// return;
 		// }
-		this.hero.walkTo(mouse.tileX, mouse.tileY);
+		
+		if (mouse.kind == 'selectable') {
+			this.hero.walkToObj(mouse.obj);
+		} else {
+			this.hero.walkTo(mouse.tileX, mouse.tileY);
+		}
 	}
 	
 }

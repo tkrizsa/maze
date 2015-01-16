@@ -29,11 +29,24 @@ Maze.Obj.Uniq = function() {};
 Maze.Obj.Uniq.extend = function(obj, maze) {
 	obj.ancestors.uniq = true;
 	
+	obj.placeTo = Maze.Obj.Uniq.placeTo;
+	
 	obj.maze = maze;
 	obj.plain = null;
 	obj.tileX = 0;
 	obj.tileY = 0;
 }
+
+Maze.Obj.Uniq.placeTo = function(plain, tileX, tileY) {
+	if (this.plain) {
+		this.plain.removeObject(this);
+	}
+	this.plain = plain;
+	this.tileX = tileX;
+	this.tileY = tileY;
+	this.plain.addObject(this);	
+}
+
 
 // ======================================== SELECTABLE =====================================
 Maze.Obj.Selectable = function() {};
