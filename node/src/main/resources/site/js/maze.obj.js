@@ -30,7 +30,7 @@ Maze.Obj.Uniq.extend = function(obj, maze) {
 	obj.ancestors.uniq = true;
 	
 	obj.maze = maze;
-	obj.level = null;
+	obj.plain = null;
 	obj.tileX = 0;
 	obj.tileY = 0;
 }
@@ -351,10 +351,10 @@ Maze.Obj.FightPlace = function(fight) {
 
 
 	this.bind('drawIt', function(cam, left, top) {
-		var xLeft 		= this.level.hasClass('FightPlace', this.tileX - 1, this.tileY);
-		var xRight 		= this.level.hasClass('FightPlace', this.tileX + 1, this.tileY);
-		var xTop 		= this.level.hasClass('FightPlace', this.tileX, this.tileY - 1);
-		var xBottom		= this.level.hasClass('FightPlace', this.tileX, this.tileY + 1);
+		var xLeft 		= this.plain.hasClass('FightPlace', this.tileX - 1, this.tileY);
+		var xRight 		= this.plain.hasClass('FightPlace', this.tileX + 1, this.tileY);
+		var xTop 		= this.plain.hasClass('FightPlace', this.tileX, this.tileY - 1);
+		var xBottom		= this.plain.hasClass('FightPlace', this.tileX, this.tileY + 1);
 		
 		var line1 = function(cam) {
 			cam.ctx.lineWidth = 1.0;

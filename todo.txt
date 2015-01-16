@@ -1,0 +1,15 @@
+* handle appearing & disappearing -> walk in, walk out if can. DONE!
+* rename level, refactor Maze.map
+* extend section key with mapId
+* introduce gates, and second map
+* introduce second server
+* client handle connection failure, reconnect
+* handle accounts, register, login, logout etc..
+
+
+
+
+
+OTHER:
+
+* Handle touch screen

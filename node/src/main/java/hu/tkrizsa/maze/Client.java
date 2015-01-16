@@ -44,7 +44,7 @@ public class Client {
 	
 	public void disconnected() {
 		for (Section section : sections.values()) {
-			section.clientRemove(this);
+			section.subscriberRemove(this);
 		}
 		sections = null;
 		disconnectedAsPlayer();
@@ -68,15 +68,25 @@ public class Client {
 			if (playerSection != null) {
 				playerSection.removePlayer(this, new PlayerPos(section.getKey(), x, y));
 			}
-			playerSection = section;
-			playerX = x;
-			playerY = y;
-			playerSection.addPlayer(this);
+			if (playerSection != null) {
+				String fromKey = playerSection.getKey();
+				int fromX = playerX;
+				int fromY = playerY;
+				playerSection = section;
+				playerX = x;
+				playerY = y;
+				playerSection.addPlayer(this, fromKey, fromX, fromY);
+			} else {
+				playerSection = section;
+				playerX = x;
+				playerY = y;
+				playerSection.addPlayer(this);
+			}
 		} else {
 			if (playerX != x || playerY != y) {
 				playerX = x;
 				playerY = y;
-				playerSection.clientReplyMap();
+				playerSection.subscribersNotify();
 			}
 		}
 	}
@@ -114,7 +124,7 @@ public class Client {
 			if (newSections.get(key) == null) {
 				Section section = sections.get(key);
 				it.remove();
-				section.clientRemove(this);
+				section.subscriberRemove(this);
 			}
 		
 		}

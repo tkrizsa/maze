@@ -160,7 +160,7 @@ public class GameServer {
 				
 				Section section = sectionGet(key);
 				
-				section.clientAdd(client);
+				section.subscriberAdd(client);
 				client.sectionAdd(section);
 				
 				newSections.put(key, section);

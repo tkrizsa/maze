@@ -75,24 +75,25 @@ Maze.Obj.Walker.extend = function(obj) {
 
 
 Maze.Obj.Walker.blurFollow = function() {
-	this.level.removeObject(this.blur);
-	this.blur.level = this.level;
+	this.plain.removeObject(this.blur);
+	this.blur.plain = this.plain;
 	this.blur.tileX = this.tileX;
 	this.blur.tileY = this.tileY;
-	this.blur.level.addObject(this.blur);
+	this.blur.plain.addObject(this.blur);
 }
 
 Maze.Obj.Walker.remove = function() {
-	this.level.removeObject(this);
-	this.blur.level.removeObject(this.blur);
+	this.plain.removeObject(this);
+	this.blur.plain.removeObject(this.blur);
+	this.maze.objRemove(this);
 }
 
-Maze.Obj.Walker.jumpTo = function(level, tileX, tileY) {
-	if (this.level) {
-		this.level.removeObject(this);
-		this.level.removeObject(this.blur);
+Maze.Obj.Walker.jumpTo = function(plain, tileX, tileY) {
+	if (this.plain) {
+		this.plain.removeObject(this);
+		this.plain.removeObject(this.blur);
 	}
-	this.level = level;
+	this.plain = plain;
 	this.tileX = tileX;
 	this.tileY = tileY;
 	this.aimTileX = this.tileX;
@@ -102,12 +103,12 @@ Maze.Obj.Walker.jumpTo = function(level, tileX, tileY) {
 	this.offsetY = 0.0;
 	this.offsetSize = 0.0;
 	
-	this.blur.level = level;
+	this.blur.plain = plain;
 	this.blur.tileX = tileX;
 	this.blur.tileY = tileY;
 	
-	this.level.addObject(this);	
-	this.level.addObject(this.blur);	
+	this.plain.addObject(this);	
+	this.plain.addObject(this.blur);	
 }
 
 
@@ -118,7 +119,7 @@ Maze.Obj.Walker.walkTo = function(tileX, tileY) {
 }
 
 Maze.Obj.Walker.walkerStepIt = function() {
-	if (!this.level)
+	if (!this.plain)
 		return;
 
 	if (this.offsetSize > 0.0) {
@@ -169,7 +170,7 @@ Maze.Obj.Walker.walkerStepIt = function() {
 
 	if (newX != this.tileX || newY != this.tileY) {
 	
-		if (this.level.isBlocking(this, newX, newY)) {
+		if (this.plain.isBlocking(this, newX, newY)) {
 			this.stopWalk();
 			return;
 		}
@@ -184,10 +185,10 @@ Maze.Obj.Walker.walkerStepIt = function() {
 		else 	if (newX == this.tileX - 1	&& newY == this.tileY + 1) {this.dir = 7;}
 	
 	
-		this.level.removeObject(this);
+		this.plain.removeObject(this);
 		this.tileX = newX;
 		this.tileY = newY;
-		this.level.addObject(this);
+		this.plain.addObject(this);
 		this.lastStep = this.maze.timeNow;
 		this.offsetSize = 1.0;
 		this.walking = true;
@@ -237,22 +238,22 @@ Maze.Obj.Walker.cancelWalk = function() {
 Maze.Obj.Walker.neighbours = function(x, y) {
 	var result = [];
 	var item;
-	if (!this.level.isBlocking(this, x+1, y))
+	if (!this.plain.isBlocking(this, x+1, y))
 		result.push({x:x+1, y:y});
-	if (!this.level.isBlocking(this, x-1, y))
+	if (!this.plain.isBlocking(this, x-1, y))
 		result.push({x:x-1, y:y});
-	if (!this.level.isBlocking(this, x, y+1))
+	if (!this.plain.isBlocking(this, x, y+1))
 		result.push({x:x, y:y+1});
-	if (!this.level.isBlocking(this, x, y-1))
+	if (!this.plain.isBlocking(this, x, y-1))
 		result.push({x:x, y:y-1});
 		
-	if (!this.level.isBlocking(this, x+1, y+1))
+	if (!this.plain.isBlocking(this, x+1, y+1))
 		result.push({x:x+1, y:y+1});
-	if (!this.level.isBlocking(this, x+1, y-1))
+	if (!this.plain.isBlocking(this, x+1, y-1))
 		result.push({x:x+1, y:y-1});
-	if (!this.level.isBlocking(this, x-1, y-1))
+	if (!this.plain.isBlocking(this, x-1, y-1))
 		result.push({x:x-1, y:y-1});
-	if (!this.level.isBlocking(this, x-1, y+1))
+	if (!this.plain.isBlocking(this, x-1, y+1))
 		result.push({x:x-1, y:y+1});
 		
 	return result;
@@ -375,7 +376,7 @@ Maze.Obj.Walker.findPath = function() {
 Maze.Obj.Walker.findAimPosition = function() {
 	
 	// if target not blocking this is the aim
-	if (!this.level.isBlocking(this, this.aimTileX, this.aimTileY)) {
+	if (!this.plain.isBlocking(this, this.aimTileX, this.aimTileY)) {
 		return {x : this.aimTileX, y : this.aimTileY};
 	}
 	
@@ -410,7 +411,7 @@ Maze.Obj.Walker.findAimPosition = function() {
 	}
 	
 	for (var i in o) {
-		if (!this.level.isBlocking(this, this.aimTileX + o[i].x, this.aimTileY + o[i].y))
+		if (!this.plain.isBlocking(this, this.aimTileX + o[i].x, this.aimTileY + o[i].y))
 			return {x: this.aimTileX + o[i].x, y: this.aimTileY + o[i].y};
 	}
 	
@@ -467,7 +468,7 @@ Maze.Obj.Walker.move = function(s, noAnim) {
 		}
 	}
 	
-	if (this.level.isBlocking(this, this.tileX + n.x,  this.tileY + n.y)) {
+	if (this.plain.isBlocking(this, this.tileX + n.x,  this.tileY + n.y)) {
 		if (s>0) 
 			this.animAddPose('fightWalk', this.poses.stepOneBlocked, true);
 		else
@@ -482,12 +483,12 @@ Maze.Obj.Walker.move = function(s, noAnim) {
 		this.recording.addMove(this, s);
 
 
-	this.level.removeObject(this);
+	this.plain.removeObject(this);
 	this.tileX += n.x;
 	this.tileY += n.y;
 	this.aimTileX = this.tileX;
 	this.aimTileY = this.tileY;
-	this.level.addObject(this);
+	this.plain.addObject(this);
 	this.blurFollow();
 	this.offsetX = -n.x;
 	this.offsetY = -n.y;

@@ -16,20 +16,22 @@ public class Section {
 
 	public String key;
 	public GameServer game;
+	private String plainId;
 	private int offX;
 	private int offY;
-	final Map<String, Client> clients = new HashMap<String, Client>();
+	final Map<String, Client> subscribers = new HashMap<String, Client>();
 	private boolean loaded = false;
 	
 	private List<List<MapItem>> items;
-	private Map<String, Client> players = new HashMap<String, Client>();
+	private Map<String, SectionPlayer> players = new HashMap<String, SectionPlayer>();
 	private Map<String, PlayerPos> awayPlayers = new HashMap<String, PlayerPos>();
 
 	public Section(GameServer game, String key) {
-		String[] keyparts = key.split("_");
-		try {  
-			offX = Integer.parseInt(keyparts[0]) * game.SECTION_SIZE;  
-			offY = Integer.parseInt(keyparts[1]) * game.SECTION_SIZE;
+		String[] keyparts = key.split("#");
+		try {
+			plainId = keyparts[0];
+			offX = Integer.parseInt(keyparts[1]) * game.SECTION_SIZE;  
+			offY = Integer.parseInt(keyparts[2]) * game.SECTION_SIZE;
 		} catch(NumberFormatException nfe) {  
 			System.err.println("Invalid section key" + key);  
 		}  		
@@ -53,15 +55,21 @@ public class Section {
 	
 
 	public void addPlayer(Client client) {
-		players.put(client.getKey(), client);
+		players.put(client.getKey(), new SectionPlayer(client));
 		awayPlayers.remove(client.playerId);
-		clientReplyMap();
+		subscribersNotify();
+	}
+	
+	public void addPlayer(Client client, String fromKey, int fromX, int fromY) {
+		players.put(client.getKey(), new SectionPlayer(client, fromKey, fromX, fromY));
+		awayPlayers.remove(client.playerId);
+		subscribersNotify();
 	}
 	
 	public void removePlayer(Client client, PlayerPos where) {
 		this.players.remove(client.getKey());
 		awayPlayers.put(client.getPlayerId(), where);
-		clientReplyMap();
+		subscribersNotify();
 	}
 	
 	// call this when client disconnects
@@ -77,27 +85,27 @@ public class Section {
 	
 	
 	// subscriptions 
-	public void clientAdd(Client client) {
-		clients.put(client.getKey(), client);
+	public void subscriberAdd(Client client) {
+		subscribers.put(client.getKey(), client);
 	}
 	
-	public void clientRemove(Client client) {
-		clients.remove(client.getKey());
+	public void subscriberRemove(Client client) {
+		subscribers.remove(client.getKey());
 	}
 	
-	public void clientReplyMap() {
-		clientReplyMap(false);
+	public void subscribersNotify() {
+		subscribersNotify(false);
 	}
 	
-	public void clientReplyMap(boolean mapChanged) {
-		System.out.println("-> clientreplymap");
+	public void subscribersNotify(boolean mapChanged) {
+		System.out.println("-> subscribersNotify");
 
 		JsonObject jresp = new JsonObject();
 		jresp.putString("cmd", "init");
 		JsonObject jresp_sections = new JsonObject();
 		jresp.putObject("sections", jresp_sections);
 		jresp_sections.putObject(getKey(), getJson(false, mapChanged));
-		for (Client client : clients.values()) {
+		for (Client client : subscribers.values()) {
 			System.out.println("-> client write");
 
 			client.write(jresp);
@@ -114,7 +122,7 @@ public class Section {
 		loaded = value;
 	
 		if (loaded)
-			clientReplyMap(true);
+			subscribersNotify(true);
 	}
 	
 	
@@ -149,7 +157,7 @@ public class Section {
 			ll.add(item);
 		}
 		
-		clientReplyMap();
+		subscribersNotify(true);
 		save();
 	}
 	
@@ -241,11 +249,16 @@ public class Section {
 		
 		if (!forDB) {
 			JsonArray jplayers = new JsonArray();
-			for(Client client : players.values()) {
+			for(SectionPlayer sectionPlayer : players.values()) {
 				JsonObject jplayer = new JsonObject();
-				jplayer.putString("id", client.getPlayerId());
-				jplayer.putNumber("x", client.getPlayerX());
-				jplayer.putNumber("y", client.getPlayerY());
+				jplayer.putString("id", sectionPlayer.getClient().getPlayerId());
+				jplayer.putNumber("x", 	sectionPlayer.getClient().getPlayerX());
+				jplayer.putNumber("y", 	sectionPlayer.getClient().getPlayerY());
+				if (sectionPlayer.getFromKey() != null) {
+					jplayer.putString("fromKey", sectionPlayer.getFromKey());
+					jplayer.putNumber("fromX", sectionPlayer.getFromX());
+					jplayer.putNumber("fromY", sectionPlayer.getFromY());
+				}
 				jplayers.addObject(jplayer);
 			}
 			jres.putArray("players", jplayers);

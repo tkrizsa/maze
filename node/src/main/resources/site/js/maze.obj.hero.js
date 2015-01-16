@@ -24,8 +24,8 @@ Maze.Obj.Hero = function(maze) {
 	this.addRectangle(19, 20, 22, 21, c); // robe*/
 	
 	this.audio = {};
-	this.audio.footstep = new Audio("audio/footstep2.mp3"); 
-	this.audio.footstep.loop = true;
+	//this.audio.footstep = new Audio("audio/footstep2.mp3"); 
+	//this.audio.footstep.loop = true;
 	this.audio.swordswing = new Audio("audio/sword_swipe.mp3"); 
 	this.audio.scream = new Audio("audio/orc_scream.mp3"); 
 	this.audio.wound = new Audio("audio/wound.mp3"); 

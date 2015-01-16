@@ -1,34 +1,21 @@
 
-/*
-console.log('itt a wörkerben!');
-postMessage('mi folyik itt gyöngyösön!');
-
-var maze = null;
-
-onmessage = function(event) {
-	switch(event.data.cmd) {
-		case 'start' : 
-			if (maze == null) {
-				maze = new Maze();
-				maze.camera.setCanvas(null, 0, 0, event.data.width, event.data.height);
-				maze.startWorker();
-			}
-		
-		break;
-	
-	
-	
-	}
-
-}
-*/
-
 
 Maze = function(domSelector) {
 
-	this.playerId = 'player' + (Math.round(Math.random()*90000) + 10000);
-	this.servers = {};
+	this.playerRecord = {
+		playerId 	: 'player' + (Math.round(Math.random()*90000) + 10000),
+		sectionKey 	: "earth#-1#0",
+		x 			: -7,
+		y 			:  13,
+		plainId		: "earth",
+		sectionX	: -1,
+		sectionY	: 0
+	}
 
+
+
+	this.SECTION_SIZE = 16;
+	
 	// CREATE NOT UNIQUE OBJECT SINGLETONES
 	this.BLOOD1 		= new Maze.Obj.Blood1();
 	this.BLOOD2			= new Maze.Obj.Blood2();
@@ -65,13 +52,18 @@ Maze = function(domSelector) {
 	this.domSelector = domSelector;
 
 	this.camera = new Maze.Camera(this);
-	this.map = new Maze.Map(this);
-	this.map.create();
+	
+	this.servers = {};					// list of servers referenced by url
+	this.subscribedSections = {};		// list of subscribed sections referenced by sectionKey
+	this.currPlayerServer = false;
+	this.plains = {};					// list of plains referenced by plainId
+	this.plains[this.playerRecord.plainId] = new Maze.Plain(this, this.playerRecord.plainId);
+	
 	
 	this.objs = new Array();
 
 	this.hero = new Maze.Obj.Hero(this);
-	this.hero.playerId = this.playerId;
+	this.hero.playerId = this.playerRecord.playerId;
 	this.objs.push(this.hero);
 	this.heroPlaced = false;
 	
@@ -100,12 +92,8 @@ Maze = function(domSelector) {
 		
 	// pops
 	this.pop = new Maze.Pop.Main(this);
-	new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.step);	
-	//new Maze.Pop.DrawMenu(this, this.pop);	
-	
-	
-	
-	
+	//new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.step);	
+	new Maze.Pop.DrawMenu(this, this.pop);	
 	
 	
 
@@ -114,7 +102,7 @@ Maze = function(domSelector) {
 	var ork;
 	for (var i = 0; i<5; i++) {
 		ork = new Maze.Obj.Ork(this);
-		ork.jumpTo(this.map.levels[0], 9 + i, 10+i*2);
+		ork.jumpTo(this.plains[0], 9 + i, 10+i*2);
 		this.objs.push(ork);
 	}
 	
@@ -122,13 +110,13 @@ Maze = function(domSelector) {
 	var ork1;
 	ork1 = new Maze.Obj.Ork(this);
 	this.objs.push(ork1);
-	ork1.jumpTo(this.map.levels[0], 7, 7);
+	ork1.jumpTo(this.plains[0], 7, 7);
 	ork1.dir = 3;
 	
 	var ork2;
 	ork2 = new Maze.Obj.Ork(this);
 	this.objs.push(ork2);
-	ork2.jumpTo(this.map.levels[0], 5, 8);
+	ork2.jumpTo(this.plains[0], 5, 8);
 	ork2.dir = 5;
 	*/
 	
@@ -188,7 +176,7 @@ Maze.prototype.stepIt = function() {
 			o.triggerObj(o, 'stepIt');
 	}
 
-	this.map.stepIt();
+	this.serversStepIt();
 	
 	this.timeLast = this.timeNow;
 }
@@ -218,6 +206,42 @@ Maze.prototype.mouseClick = function(mouse) {
 		this.hero.walkTo(mouse.tileX, mouse.tileY);
 	}
 	
+}
+
+Maze.prototype.objIndex = function(obj) {
+	for (var i in this.objs) {
+		if (this.objs[i] == obj) {
+			return i;
+		}
+	}
+	return false;
+}
+
+Maze.prototype.objIndexByPlayerId = function(playerId) {
+	for (var i in this.objs) {
+		if (this.objs[i].playerId == playerId) {
+			return i;
+		}
+	}
+	return false;
+}
+
+Maze.prototype.objByPlayerId = function(playerId) {
+	for (var i in this.objs) {
+		if (this.objs[i].playerId == playerId) {
+			return this.objs[i];
+		}
+	}
+	return false;
+}
+
+Maze.prototype.objRemove = function(obj) {
+	for (var i in this.objs) {
+		if (this.objs[i] == obj) {
+			delete this.objs[i];
+			return;
+		}
+	}
 }
 
 // ======================================== CAMERA =====================================
@@ -310,7 +334,7 @@ Maze.Camera.prototype.render = function() {
 	// reset mouseHover
 	this.setMouseHover(false, null);
 
-	if (!this.follow || !this.follow.level)
+	if (!this.follow || !this.follow.plain)
 		return;
 
 	if (this.follow) {
@@ -340,7 +364,7 @@ Maze.Camera.prototype.render = function() {
 		var selectedTileX = Math.floor((this.mouseX - canvasMidX + this.centerOffsetX) / this.TILE_WIDTH) + this.centerTileX;
 		var selectedTileY = Math.floor((this.mouseY - canvasMidY + this.centerOffsetY) / this.TILE_HEIGHT) + this.centerTileY;
 	
-		var item = this.follow.level.itemAt(selectedTileX, selectedTileY);
+		var item = this.follow.plain.itemAt(selectedTileX, selectedTileY);
 		var selTile = false;
 		var selSelectable = false;
 		var selBlur = false;
@@ -374,7 +398,7 @@ Maze.Camera.prototype.render = function() {
 	
 	for(var y = -viewRangeY; y <= viewRangeY; y++) {
 		for(var x = -viewRangeX; x <= +viewRangeX; x++) {
-			var item = this.follow.level.itemAt(x + this.centerTileX, y + this.centerTileY);
+			var item = this.follow.plain.itemAt(x + this.centerTileX, y + this.centerTileY);
 			
 			
 			while (item) {
@@ -404,7 +428,7 @@ Maze.Camera.prototype.render = function() {
 					// SECTION BORDER
 					var xx = (x + this.centerTileX) % 16;
 					var yy = (y + this.centerTileY) % 16;
-					if (xx==0 || xx == Maze.SECTION_SIZE - 1 || yy == 0 || yy == Maze.SECTION_SIZE - 1) {
+					if (xx==0 || xx == this.maze.SECTION_SIZE - 1 || yy == 0 || yy == this.maze.SECTION_SIZE - 1) {
 						ctx.lineWidth= 1;
 						ctx.strokeStyle = 'rgba(0,0,0,1.0)';
 					}
@@ -415,7 +439,7 @@ Maze.Camera.prototype.render = function() {
 						ctx.closePath();
 						ctx.stroke();						
 					}
-					if (xx == Maze.SECTION_SIZE - 1) {
+					if (xx == this.maze.SECTION_SIZE - 1) {
 						ctx.beginPath();
 						ctx.moveTo(left + this.TILE_WIDTH - 1, top);
 						ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
@@ -429,12 +453,22 @@ Maze.Camera.prototype.render = function() {
 						ctx.closePath();
 						ctx.stroke();						
 					}
-					if (yy == Maze.SECTION_SIZE - 1) {
+					if (yy == this.maze.SECTION_SIZE - 1) {
 						ctx.beginPath();
 						ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
 						ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
 						ctx.closePath();
 						ctx.stroke();						
+					}
+					if (xx==0 && yy==0) {
+						var secX = Math.floor((x + this.centerTileX) / this.maze.SECTION_SIZE);
+						var secY = Math.floor((y + this.centerTileY) / this.maze.SECTION_SIZE);
+					
+					
+						ctx.font = "12px Arial";
+						ctx.fillStyle = 'rgba(0,0,0,1.0)';
+						ctx.fillText(secX + ", " + secY, left + 3, top + 11);
+					
 					}
 					
 				}
@@ -561,10 +595,12 @@ Maze.Camera.prototype.setMouseHover = function(kind, obj, x, y) {
 
 
 
+
+
 /* ==================================================== DRAWING ================================================ */
 Maze.prototype.drawPut = function(mouse) {
 	if (this.draw.type == 'terrain' || this.draw.type == 'floor' || this.draw.type == 'object')  {
-		var level = this.camera.follow.level;
+		var plain = this.camera.follow.plain;
 		var className = this.draw.terrainClass;
 		if (this.draw.type == 'object')
 			className = this.draw.objectClass;
@@ -574,7 +610,7 @@ Maze.prototype.drawPut = function(mouse) {
 			obj = obj[0];
 		}
 
-		var section = level.getSection(mouse.tileX, mouse.tileY);
+		var section = plain.getSection(mouse.tileX, mouse.tileY);
 		if (!section)
 			return;
 			
@@ -601,8 +637,8 @@ Maze.prototype.drawPut = function(mouse) {
 		
 		
 	if (this.draw.type == 'objectRemove') {
-		var level = this.camera.follow.level;
-		var item = level.itemAt(mouse.tileX, mouse.tileY);
+		var plain = this.camera.follow.plain;
+		var item = plain.itemAt(mouse.tileX, mouse.tileY);
 		var obj = null;
 		while (item != null) {
 			if (!item.obj.is('Floor'))
@@ -611,46 +647,46 @@ Maze.prototype.drawPut = function(mouse) {
 		
 		}
 		if (obj) 
-			level.removeObject(obj, mouse.tileX, mouse.tileY);
+			plain.removeObject(obj, mouse.tileX, mouse.tileY);
 	
 	}
 
 }
 
 Maze.prototype.drawTerrain = function(mouse) {
-	var level = this.camera.follow.level;
+	var plain = this.camera.follow.plain;
 	var objs = this[this.draw.terrainClass.toUpperCase()];
-	level.addFloor(objs[0], mouse.tileX, mouse.tileY);
+	plain.addFloor(objs[0], mouse.tileX, mouse.tileY);
 	for (var i in this.NS) {
 		var n = this.NS[i];
-		level.addFloor(objs[0], mouse.tileX + n.x, mouse.tileY + n.y);
+		plain.addFloor(objs[0], mouse.tileX + n.x, mouse.tileY + n.y);
 	}
-	this.drawTerrainCorrect(level, 'SandFloor');
-	this.drawTerrainCorrect(level, 'WaterFloor');
-	this.drawTerrainCorrect(level, 'RockFloor');
+	this.drawTerrainCorrect(plain, 'SandFloor');
+	this.drawTerrainCorrect(plain, 'WaterFloor');
+	this.drawTerrainCorrect(plain, 'RockFloor');
 }
 
 Maze.prototype.drawFloor = function(mouse) {
-	var level = this.camera.follow.level;
+	var plain = this.camera.follow.plain;
 	var obj = this[this.draw.terrainClass.toUpperCase()];
-	level.addFloor(obj, mouse.tileX, mouse.tileY);
+	plain.addFloor(obj, mouse.tileX, mouse.tileY);
 	
-	this.drawTerrainCorrect(level, 'SandFloor');
-	this.drawTerrainCorrect(level, 'WaterFloor');
-	this.drawTerrainCorrect(level, 'RockFloor');
+	this.drawTerrainCorrect(plain, 'SandFloor');
+	this.drawTerrainCorrect(plain, 'WaterFloor');
+	this.drawTerrainCorrect(plain, 'RockFloor');
 }
 
 Maze.prototype.drawObject = function(mouse) {
-	var level = this.camera.follow.level;
+	var plain = this.camera.follow.plain;
 	var obj = this[this.draw.objectClass.toUpperCase()];
-	level.addObject(obj, mouse.tileX, mouse.tileY);
+	plain.addObject(obj, mouse.tileX, mouse.tileY);
 }
 
 
-Maze.prototype.drawTerrainCorrect = function(level, terrainClass) {
+Maze.prototype.drawTerrainCorrect = function(plain, terrainClass) {
 	var objs = this[terrainClass.toUpperCase()];
-	for (var section_key in this.map.subscribedSections) {
-		var section = this.map.subscribedSections[section_key];
+	for (var section_key in this.subscribedSections) {
+		var section = this.subscribedSections[section_key];
 		for (var sy = 0; sy < section.tileHeight; sy++) {
 			for (var sx = 0; sx < section.tileWidth; sx++) {
 			
@@ -658,19 +694,19 @@ Maze.prototype.drawTerrainCorrect = function(level, terrainClass) {
 				var x = sx + section.offX;
 				var y = sy + section.offY;
 			
-				if (!level.hasClass(terrainClass, x, y, true))
+				if (!plain.hasClass(terrainClass, x, y, true))
 					continue;
-				var xLeft 		= level.hasClass2(terrainClass, x-1, y, true);
-				var xRight 		= level.hasClass2(terrainClass, x+1, y, true);
-				var xTop 		= level.hasClass2(terrainClass, x, y-1, true);
-				var xBottom 	= level.hasClass2(terrainClass, x, y+1, true);
+				var xLeft 		= plain.hasClass2(terrainClass, x-1, y, true);
+				var xRight 		= plain.hasClass2(terrainClass, x+1, y, true);
+				var xTop 		= plain.hasClass2(terrainClass, x, y-1, true);
+				var xBottom 	= plain.hasClass2(terrainClass, x, y+1, true);
 				var xs = ((xLeft?1:0) + (xRight?1:0) + (xBottom?1:0) + (xTop?1:0));
 				var i = 0;
 				
-				var xTopLeft 			= level.hasClass2(terrainClass, x-1, y-1, true);
-				var xTopRight 			= level.hasClass2(terrainClass, x+1, y-1, true);
-				var xBottomRight 		= level.hasClass2(terrainClass, x+1, y+1, true);
-				var xBottomLeft		 	= level.hasClass2(terrainClass, x-1, y+1, true);
+				var xTopLeft 			= plain.hasClass2(terrainClass, x-1, y-1, true);
+				var xTopRight 			= plain.hasClass2(terrainClass, x+1, y-1, true);
+				var xBottomRight 		= plain.hasClass2(terrainClass, x+1, y+1, true);
+				var xBottomLeft		 	= plain.hasClass2(terrainClass, x-1, y+1, true);
 				
 				
 				if (xs == 3 && !xTop)	 	{ i = 1; }
@@ -688,7 +724,7 @@ Maze.prototype.drawTerrainCorrect = function(level, terrainClass) {
 				if (xs == 4 && !xBottomRight) 			{ i = 12; }
 				if (xs == 4 && !xBottomLeft) 			{ i = 13; }
 			
-				level.addFloor(objs[i], x, y);
+				plain.addFloor(objs[i], x, y);
 			}
 		}
 	}

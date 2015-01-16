@@ -231,7 +231,7 @@ Maze.Pop.Main = function(maze) {
 	this.exportButton.width = 60;
 	this.exportButton.color = '#e0e0e0';
 	this.exportButton.onClick = function() {
-		var mapData = maze.hero.level.serialize();
+		var mapData = maze.hero.plain.serialize();
 		$('#mapdata').html(mapData);
 
 	}
