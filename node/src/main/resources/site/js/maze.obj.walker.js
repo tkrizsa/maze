@@ -207,29 +207,13 @@ Maze.Obj.Walker.walkerStepIt = function() {
 		
 	} else {
 		if (this.walking) {
-			var aim = this.aimObject;
-			var aimOk = this.aimObject && this.tileX == this.aimObject.tileX && this.tileY == this.aimObject.tileY;
+			//var aim = this.aimObject;
+			var aimOk = 
+				(this.aimObject && this.tileX == this.aimObject.tileX && this.tileY == this.aimObject.tileY) ||
+				(!this.aimObject && Math.abs(this.tileX - this.aimTileX) <= 1 && Math.abs(this.tileY - this.aimTileY) <= 1)
 			this.stopWalk();
 			if (aimOk) {
-				
-				if (aim.is("gate")) {
-					if (this == this.maze.hero) {
-				
-						this.maze.playerRecord.plainId = aim.targetPlainId;
-						this.maze.playerRecord.sectionX = Math.floor(aim.targetX / 16);
-						this.maze.playerRecord.sectionY = Math.floor(aim.targetY / 16);
-						this.maze.playerRecord.sectionKey = this.maze.playerRecord.plainId + '#' + this.maze.playerRecord.sectionX + "#" + this.maze.playerRecord.sectionY;
-						this.maze.playerRecord.x = aim.targetX;
-						this.maze.playerRecord.y = aim.targetY;
-					
-						this.maze.heroPlaced = false;
-						this.plain = null;
-					}
-				
-				
-				
-				}
-				
+				this.trigger('arrived')
 			}
 		}
 	}
@@ -410,7 +394,7 @@ Maze.Obj.Walker.findPath = function() {
 Maze.Obj.Walker.findAimPosition = function() {
 	
 	// if target not blocking this is the aim
-	if (!this.plain.isBlocking(this, this.aimTileX, this.aimTileY)) {
+	if (!this.plain.isBlocking(this, this.aimTileX, this.aimTileY)  && !this.aimNear) {
 		return {x : this.aimTileX, y : this.aimTileY};
 	}
 	

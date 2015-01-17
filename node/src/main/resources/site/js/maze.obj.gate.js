@@ -20,4 +20,9 @@ Maze.Obj.Gate = function(maze, targetPlainId, targetX, targetY) {
 	this.sourceHeight = 87; 
 }
 
+Maze.Obj.Gate.prototype.setMapData = function(data) {
+	this.targetPlainId 	= data.plainId;
+	this.targetX 		= data.x;
+	this.targetY		= data.y;
+}
 

@@ -198,17 +198,8 @@ Maze.prototype.mouseClick = function(mouse) {
 		if (this.hero.inFight || this.hero.dead)
 			return;
 	
-		// if (mouse.obj.is('fighter')) {
-			// this.hero.attack(mouse.obj);
-			// mouse.obj.mouseActive = true;
-			// return;
-		// }
-		
-		if (mouse.kind == 'selectable') {
-			this.hero.walkToObj(mouse.obj);
-		} else {
-			this.hero.walkTo(mouse.tileX, mouse.tileY);
-		}
+
+		this.hero.click(mouse);
 	}
 	
 }

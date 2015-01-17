@@ -29,6 +29,87 @@ Maze.Obj.Hero = function(maze) {
 	this.audio.swordswing = new Audio("audio/sword_swipe.mp3"); 
 	this.audio.scream = new Audio("audio/orc_scream.mp3"); 
 	this.audio.wound = new Audio("audio/wound.mp3"); 
+	
+	
+	this.command = false;
+	this.commandObj = null;
+	this.commandTileX = 0;
+	this.commandTileY = 0;
+	
+	this.bind('arrived', Maze.Obj.Hero.prototype.arrived);
+}
+
+Maze.Obj.Hero.prototype.click = function(mouse) {
+	switch (this.command) {
+		case false : 
+			this.aimNear = false;
+			if (mouse.kind == 'selectable') {
+				this.commandObj = mouse.obj;
+				this.walkToObj(mouse.obj);
+			} else {
+				this.walkTo(mouse.tileX, mouse.tileY);
+			}
+		break;
+		case "dig" : {
+			this.aimNear = true;
+			this.commandTileX = mouse.tileX;
+			this.commandTileY = mouse.tileY;
+			this.walkTo(mouse.tileX, mouse.tileY);
+		break;
+		}
+	}
+}
+
+Maze.Obj.Hero.prototype.cancel = function() {
+	this.commandObj = null;
+	this.command = false;
+	this.maze.pop.heroCancel();
+}
+
+Maze.Obj.Hero.prototype.arrived = function() {
+	if (this != this.maze.hero) 
+		return;
+
+	switch (this.command) {
+		case false :
+			if (this.commandObj && this.commandObj.is("gate")) {
+				if (this.commandObj.targetPlainId == this.plain.plainId) {
+					alert("Gate to same plain??");
+					return;
+				}
+				this.maze.playerRecord.plainId = this.commandObj.targetPlainId;
+				this.maze.playerRecord.sectionX = Math.floor(this.commandObj.targetX / 16);
+				this.maze.playerRecord.sectionY = Math.floor(this.commandObj.targetY / 16);
+				this.maze.playerRecord.sectionKey = this.maze.playerRecord.plainId + '#' + this.maze.playerRecord.sectionX + "#" + this.maze.playerRecord.sectionY;
+				this.maze.playerRecord.x = this.commandObj.targetX;
+				this.maze.playerRecord.y = this.commandObj.targetY;
+			
+				this.maze.heroPlaced = false;
+				this.plain = null;
+				this.cancel();
+				
+			}
+		break;
+		case "dig" :
+			if (this.plain.isBlocking(this, this.commandTileX, this.commandTileY)) {
+				alert("cannot dig here!");
+			} else {
+				/*var gate = new Maze.Obj.Gate(this.maze, 'cave'+(Math.round(Math.random()*90000) + 10000), 2, 3);
+				gate.placeTo(this.plain, this.commandTileX, this.commandTileY);*/
+				
+				var msg = {
+					cmd : 'dig',
+					x : this.commandTileX,
+					y :	this.commandTileY,
+					plainId : this.plain.plainId
+				}
+				this.maze.currPlayerServer.sock.send(JSON.stringify(msg));				
+			}
+			this.cancel();
+
+		break;
+	}
+
 }
 
 

@@ -51,6 +51,14 @@ public class GameServer {
 		return mapItemSingletones.get(className);
 	}
 	
+	public MapItem getMapItem(String className) {
+		if ("Gate".equals(className)) {
+			return new MapItemGate();
+		} else {
+			return getSingle(className);
+		}
+	}
+	
 	public void clientConnected(Client client) {
 		clients.put(client.getKey(), client);
 	}
@@ -67,19 +75,15 @@ public class GameServer {
 			clientMessageInit(client, msg);
 		} else if ("draw".equals(cmd)) {
 			clientMessageDraw(client, msg);
+		} else if ("dig".equals(cmd)) {
+			clientMessageDig(client, msg);
 		} else {
 			client.error("unknown command : " + cmd);
 		
 		}
-	
-		/*JsonObject resp = new JsonObject();
-		resp.putString("Hello", "Leo");
-		resp.putString("cmd", cmd);
-		client.write(resp);*/
-		
-		
-	
 	}
+	
+	
 
 	public void clientMessageInit(Client client, JsonObject msg) {
 	
@@ -190,16 +194,20 @@ public class GameServer {
 	public void clientMessageDraw(Client client, JsonObject msg) {
 		String key 			= msg.getString("sectionKey");
 		if (key == null) {
-			System.out.println("key is null");
+			client.error("key is null");
 			return;
 		}
 		Section section 	= sectionGet(key);
+		if (!section.isLoaded()) {
+			client.error("Section not loaded.");
+			return;
+		}
 		Integer x 			= msg.getInteger("x");
 		Integer y 			= msg.getInteger("y");
 		String className	= msg.getString("className");
 		MapItem item		= getSingle(className);
 		if (item == null) {
-			System.out.println("Class not found : " + className);
+			client.error("Class not found : " + className);
 			return;
 		}
 		
@@ -207,17 +215,51 @@ public class GameServer {
 		section.draw(x, y, item);
 	}
 	
+	public void clientMessageDig(Client client, JsonObject msg) {
+		String plainId = msg.getString("plainId");
+		if (plainId == null) {
+			client.error("plainId is null");
+			return;
+		}
+		Integer x = msg.getInteger("x");
+		if (x == null) {
+			client.error("x is null");
+			return;
+		}
+		Integer y = msg.getInteger("y");
+		if (y == null) {
+			client.error("y is null");
+			return;
+		}
+		String sectionKey = createSectionKey(plainId, x,  y);
+		
+		Section section 	= sectionGet(sectionKey);
+		if (!section.isLoaded()) {
+			client.error("Section not loaded.");
+			return;
+		}
+
+		MapItem item		= new MapItemGate("cave123", 2, 3);
+		section.draw(x, y, item);
+	}
+	
+	
+	/* ======================================= MISC ============================================= */
+	
+	public String createSectionKey(String plainId, int x, int y) {
+		int secX = x>=0 ? x / SECTION_SIZE : ~(~x / SECTION_SIZE);
+		int secY = y>=0 ? y / SECTION_SIZE : ~(~y / SECTION_SIZE);
+		return plainId + "#" + secX + "#" + secY;
+	}
+	
 	public Section sectionGet(String key) {
 		Section section = sections.get(key);
 		if (section != null) {
 			return section;
 		}
-		
 		section = new Section(this, key);
 		sections.put(key, section);
 		return section;
-	
-	
 	}
 	
 	/* ======================================= CASSANDRA ============================================= */

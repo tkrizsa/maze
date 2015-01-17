@@ -164,6 +164,17 @@ Maze.Server.prototype.processResponse = function(data) {
 	console.log("SERVER RESPONSE : ");
 	console.log(data);
 	
+	if (!data) {
+		alert("No data returned from server!");
+		return;
+	}
+	
+	if (data.error) {
+		alert("Server : " + data.error);
+		return;
+		
+	}
+	
 	for (var rsection_key in data.sections) {
 		var section = this.maze.subscribedSections[rsection_key];
 		if (!section) {
@@ -631,15 +642,16 @@ Maze.Section.prototype.deSerialize = function(result) {
 				if (typeof items[i] == 'number') {
 					className = result.objects[items[i]];
 					obj = this.plain.maze[className.toUpperCase()];
-					if (!obj.isBlocking) {
+					if (!obj.isBlocking) { // if array..
 						obj = obj[0];
 					}
 				} else {
-					className = result.objects[items[i].CI];
-					obj = this.plain.maze[className.toUpperCase()];
-					if (!obj.isBlocking) {
-						obj = obj[0];
-					}
+					className = result.objects[items[i]._ix];
+					obj = new Maze.Obj[className]();
+					obj.plain = this;
+					obj.tileX = this.offX + x;
+					obj.tileY = this.offY + y;
+					obj.setMapData(items[i]);
 				}
 				
 				

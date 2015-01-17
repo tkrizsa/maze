@@ -204,10 +204,22 @@ public class Section {
 			
 			JsonArray jlist = (JsonArray)jitems.get(i);
 			for (int j = 0; j < jlist.size(); j++) {
-				int classIndex = (int)jlist.get(j);
-				String className = classNames.get(classIndex);
+				Object omidata = jlist.get(j);
+				int classIndex = -1;
+				JsonObject jmidata = null;
+				if (omidata instanceof JsonObject) {
+					jmidata = (JsonObject)omidata;
+					classIndex = jmidata.getInteger("_ix");
+					
+				} else {
+					classIndex = (int)omidata;
+				}
 				
-				MapItem obj = game.getSingle(className);
+				String className = classNames.get(classIndex);
+				MapItem obj = game.getMapItem(className);
+				if (jmidata != null) {
+					obj.setMapData(jmidata);
+				}
 				ll.add(obj);
 			}
 			
@@ -237,7 +249,13 @@ public class Section {
 						objects.put(mi.getClassName(), jobjects.size()-1);
 						index = jobjects.size()-1;
 					}
-					jmapitem.addNumber(index);
+					JsonObject jmidata = mi.getMapData();
+					if (jmidata == null) {
+						jmapitem.addNumber(index);
+					} else {
+						jmidata.putNumber("_ix", index);
+						jmapitem.addObject(jmidata);
+					}
 				}
 				jitems.addArray(jmapitem);
 			}

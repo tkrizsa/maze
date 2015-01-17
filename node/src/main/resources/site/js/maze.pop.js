@@ -40,6 +40,10 @@ Maze.Pop.extend = function(pop, params) {
 
 
 Maze.Pop.getLeft = function() {
+	if (typeof this.right != 'undefined') {
+		return this.parent.getWidth() - this.right - this.getWidth();
+	}
+
 	var p = 0;
 	if (this.parent)
 		p = this.parent.getLeft();
@@ -47,6 +51,9 @@ Maze.Pop.getLeft = function() {
 }
 
 Maze.Pop.getTop = function() {
+	if (typeof this.bottom != 'undefined') {
+		return this.parent.getHeight() - this.bottom - this.getHeight();
+	}
 	var p = 0;
 	if (this.parent)
 		p = this.parent.getTop();
@@ -63,6 +70,9 @@ Maze.Pop.getHeight = function() {
 
 
 Maze.Pop.drawIt = function(cam) {
+	if (this.hidden)
+		return;
+
 	var left = this.getLeft();
 	var top = this.getTop();
 	var width = this.getWidth();
@@ -185,9 +195,11 @@ Maze.Pop.ButtonIcon = function(parent, p) {
 }
 
 
-// ============================================ MAIN =========================================
+// ================================================================================= MAIN ================================================================================
 Maze.Pop.Main = function(maze) {
 	this.maze = maze;
+	var thisPop = this;
+	
 	Maze.Pop.extend(this, {
 		left : 0,
 		top : 0,
@@ -233,10 +245,42 @@ Maze.Pop.Main = function(maze) {
 	this.exportButton.onClick = function() {
 		var mapData = maze.hero.plain.serialize();
 		$('#mapdata').html(mapData);
-
 	}
 	
+	
+	this.cmdDigButton = new Maze.Pop.ButtonText(this, 'Dig');
+	this.cmdDigButton.left = 5;
+	this.cmdDigButton.bottom = 5;
+	this.cmdDigButton.width = 60;
+	this.cmdDigButton.height = 60;
+	this.cmdDigButton.color = '#e0e0e0';
+	this.cmdDigButton.onClick = function() {
+		maze.hero.command = 'dig';
+		thisPop.cmdDigButton.hidden = true;
+		thisPop.cmdCancelButton.hidden = false;
+	}
+	
+	this.cmdCancelButton = new Maze.Pop.ButtonText(this, 'Cancel');
+	this.cmdCancelButton.left = 5;
+	this.cmdCancelButton.bottom = 5;
+	this.cmdCancelButton.width = 60;
+	this.cmdCancelButton.height = 60;
+	this.cmdCancelButton.color = '#e0e0e0';
+	this.cmdCancelButton.hidden = true;
+	this.cmdCancelButton.onClick = function() {
+		thisPop.heroCancel();
+	}
+	
+	
+
+	this.heroCancel = function() {
+		maze.hero.command = false;
+		thisPop.cmdDigButton.hidden = false;
+		thisPop.cmdCancelButton.hidden = true;
+	}
 }
+
+
 
 
 
