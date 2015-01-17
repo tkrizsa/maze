@@ -8,6 +8,7 @@ import org.vertx.java.core.eventbus.Message;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Random;
 
 import hu.tkrizsa.maze.mapitem.*;
 
@@ -16,6 +17,8 @@ public class GameServer {
 
 	private final Map<String, MapItem> mapItemSingletones = new HashMap<String, MapItem>();
 	{
+		mapItemSingletones.put("Nothing", 			new MapItemFloor("Nothing"));
+		
 		mapItemSingletones.put("GrassFloor", 		new MapItemFloor("GrassFloor"));
 		mapItemSingletones.put("TileFloor1", 		new MapItemFloor("TileFloor1"));
 		mapItemSingletones.put("TileFloor2", 		new MapItemFloor("TileFloor2"));
@@ -34,6 +37,7 @@ public class GameServer {
 	}
 
 	
+	final Map<String, Plain> plains = new HashMap<String, Plain>();
 	final Map<String, Client> clients = new HashMap<String, Client>();
 	final Map<String, Section> sections = new HashMap<String, Section>();
 	
@@ -45,6 +49,8 @@ public class GameServer {
 
 	public GameServer(EventBus eventBus) {
 		this.eventBus = eventBus;
+		
+		this.loadPlains();
 	}
 	
 	public MapItem getSingle(String className) {
@@ -129,7 +135,10 @@ public class GameServer {
 			
 			String key = jpos.getString("key");
 			Section section = sectionGet(key);
-			
+			if (section == null) {
+				client.error("Invalid section : " + key);
+				return;
+			}
 			client.setPlayer(section, x, y);
 		} else {
 			client.disconnectedAsPlayer();
@@ -163,6 +172,11 @@ public class GameServer {
 				Boolean mapNeeded = jsection.getBoolean("mapNeeded");
 				
 				Section section = sectionGet(key);
+				if (section == null) {
+					client.error("Invalid section : " + key);
+					return;
+				}
+				
 				
 				section.subscriberAdd(client);
 				client.sectionAdd(section);
@@ -186,9 +200,6 @@ public class GameServer {
 			if (jresp_sections.size() > 0)
 				client.write(jresp);
 		}
-		
-		
-		
 	}
 
 	public void clientMessageDraw(Client client, JsonObject msg) {
@@ -198,6 +209,11 @@ public class GameServer {
 			return;
 		}
 		Section section 	= sectionGet(key);
+		if (section == null) {
+			client.error("Invalid section : " + key);
+			return;
+		}
+		
 		if (!section.isLoaded()) {
 			client.error("Section not loaded.");
 			return;
@@ -231,16 +247,40 @@ public class GameServer {
 			client.error("y is null");
 			return;
 		}
-		String sectionKey = createSectionKey(plainId, x,  y);
+		String key = createSectionKey(plainId, x,  y);
 		
-		Section section 	= sectionGet(sectionKey);
+		Section section 	= sectionGet(key);
+		if (section == null) {
+			client.error("Invalid section : " + key);
+			return;
+		}
+		
 		if (!section.isLoaded()) {
 			client.error("Section not loaded.");
 			return;
 		}
 
-		MapItem item		= new MapItemGate("cave123", 2, 3);
-		section.draw(x, y, item);
+		Random rn = new Random();
+		int n = 999999 - 100000 + 1;
+		int i = rn.nextInt() % n;
+		int randomNum =  100000 + i;
+		String cavePlainId = "cave" + randomNum;
+		String caveSectionKey = cavePlainId + "#0#0";
+		
+		Plain cavePlain = new Plain(cavePlainId, 0, 10, 0, 10, "RockFloor");
+		plains.put(cavePlainId, cavePlain);
+		savePlain(cavePlain);
+		
+		Section caveSection = new Section(this, cavePlain, caveSectionKey);
+		sections.put(caveSectionKey, caveSection);
+		caveSection.notExists();
+
+		MapItem caveGate	= new MapItemGate(plainId, x, y);
+		caveSection.draw(4, 3, caveGate);
+		
+		
+		MapItem gate		= new MapItemGate(cavePlainId, 4, 3);
+		section.draw(x, y, gate);
 	}
 	
 	
@@ -257,26 +297,61 @@ public class GameServer {
 		if (section != null) {
 			return section;
 		}
-		section = new Section(this, key);
+		String plainId = getPlainIdOfKey(key);
+		Plain plain = plains.get(plainId);
+		if (plain == null)
+			return null;
+			
+		plain.checkSectionKey(key);
+		
+		
+		section = new Section(this, plain, key);
 		sections.put(key, section);
+		section.load();
 		return section;
 	}
 	
+	public String getPlainIdOfKey(String key) {
+		String[] keyparts = key.split("#");
+		return keyparts[0];
+	}
+	
+	
 	/* ======================================= CASSANDRA ============================================= */
-	public void saveSection(Section section) {
+	public void savePlain(Plain plain) {
 		JsonObject req = new JsonObject();
 		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.sections (key, map) VALUES (?, ?)");
+		req.putString("statement", "INSERT INTO maze.plains (plainid, info) VALUES (?, ?)");
 		JsonArray v0 = new JsonArray();
-		v0.addString(section.getKey());
-		v0.addString(section.getJson(true, false).toString());
+		v0.addString(plain.getPlainId());
+		v0.addObject(plain.getData());
 		JsonArray values = new JsonArray();
 		values.addArray(v0);
 		req.putArray("values", values);
 		
 		
 		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {
+			public void handle(Message<JsonObject> message) {	
+				System.out.println("Cassandra reply " + message.body());
+			}
+		});
+	}
+	
+	public void saveSection(Section section) {
+		JsonObject req = new JsonObject();
+		req.putString("action", "prepared");
+		req.putString("statement", "INSERT INTO maze.sections (key, map, plainId) VALUES (?, ?, ?)");
+		JsonArray v0 = new JsonArray();
+		v0.addString(section.getKey());
+		v0.addString(section.getJson(true, false).toString());
+		v0.addString(section.plain.getPlainId());
+		JsonArray values = new JsonArray();
+		values.addArray(v0);
+		req.putArray("values", values);
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
+			public void handle(Message<JsonObject> message) {	
 				System.out.println("Cassandra reply " + message.body());
 			}
 		});
@@ -304,6 +379,27 @@ public class GameServer {
 					section.notExists();
 				}
 				
+			}
+		});
+	}
+	
+	public void loadPlains() {
+		JsonObject req = new JsonObject();
+		req.putString("action", "raw");
+		req.putString("statement", "SELECT * FROM maze.plains");
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
+			public void handle(Message<JsonArray> message) {
+				System.out.println("Cassandra reply " + message.body());
+				for (int i = 0; i < message.body().size(); i++) {
+					JsonObject jrow = message.body().get(i);
+					String plainId = jrow.getString("plainid");
+					JsonObject jinfo = jrow.getObject("info");
+					Plain newPlain = new Plain(plainId);
+					newPlain.setData(jinfo);
+					plains.put(plainId, newPlain);
+				} 
 			}
 		});
 	}

@@ -195,6 +195,13 @@ Maze.Obj.Terrain.createAll = function(terrainClass) {
 }
 
 // ===================================== STONEFLOOR ======================================
+Maze.Obj.Nothing = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Solid.extend(this, '#111111');
+	this.ancestors.Floor = true;
+	this.className = 'Nothing';
+};
+
 Maze.Obj.GrassFloor = function() {
 	Maze.Obj.extend(this);
 	Maze.Obj.Solid.extend(this, '#777656');

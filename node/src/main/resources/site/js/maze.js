@@ -17,6 +17,8 @@ Maze = function(domSelector) {
 	this.SECTION_SIZE = 16;
 	
 	// CREATE NOT UNIQUE OBJECT SINGLETONES
+	this.NOTHING 		= new Maze.Obj.Nothing();
+	
 	this.BLOOD1 		= new Maze.Obj.Blood1();
 	this.BLOOD2			= new Maze.Obj.Blood2();
 	this.BLOOD_BIG 		= new Maze.Obj.BloodBig();

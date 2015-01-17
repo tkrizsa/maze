@@ -272,13 +272,13 @@ Maze.Server.prototype.processResponse = function(data) {
 		this.maze.hero.jumpTo(section.plain, this.maze.playerRecord.x, this.maze.playerRecord.y);
 		this.maze.heroPlaced = true;
 		
-		if (section.plain.plainId == 'earth') {
-			var gate = new Maze.Obj.Gate(this.maze, 'moon', 2, 3);
-			gate.placeTo(section.plain, -14, 2);
-		} else {
-			var gate = new Maze.Obj.Gate(this.maze, 'earth', -14, 3);
-			gate.placeTo(section.plain, 2, 2);
-		}
+		// if (section.plain.plainId == 'earth') {
+			// var gate = new Maze.Obj.Gate(this.maze, 'moon', 2, 3);
+			// gate.placeTo(section.plain, -14, 2);
+		// } else {
+			// var gate = new Maze.Obj.Gate(this.maze, 'earth', -14, 3);
+			// gate.placeTo(section.plain, 2, 2);
+		// }
 		
 		
 	}

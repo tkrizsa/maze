@@ -16,6 +16,7 @@ public class Section {
 
 	public String key;
 	public GameServer game;
+	public Plain plain;
 	private String plainId;
 	private int offX;
 	private int offY;
@@ -25,8 +26,9 @@ public class Section {
 	private List<List<MapItem>> items;
 	private Map<String, SectionPlayer> players = new HashMap<String, SectionPlayer>();
 	private Map<String, PlayerPos> awayPlayers = new HashMap<String, PlayerPos>();
+	
 
-	public Section(GameServer game, String key) {
+	public Section(GameServer game, Plain plain, String key) {
 		String[] keyparts = key.split("#");
 		try {
 			plainId = keyparts[0];
@@ -40,10 +42,10 @@ public class Section {
 		System.out.println("off : " + offX + ", " + offY);
 		this.game = game;
 		this.key = key;
+		this.plain = plain;
 
 		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
 
-		load();		
 	}
 	
 	public String getKey() {
@@ -173,13 +175,20 @@ public class Section {
 	
 	// called when loaded, but section not exists in cassandra
 	protected void notExists() {
-		MapItem GRASS = game.getSingle("GrassFloor");
+		MapItem FLOOR = game.getSingle(plain.getDefaultFloor());
+		MapItem NOTHING = game.getSingle("Nothing");
 	
 		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
-		for (int i = 0; i < GameServer.SECTION_SIZE * GameServer.SECTION_SIZE; i++) {
-			List<MapItem> ll = new LinkedList<MapItem>();
-			ll.add(GRASS);
-			items.add(ll);
+		for (int y = 0; y < GameServer.SECTION_SIZE; y++) {
+			for (int x = 0; x < GameServer.SECTION_SIZE; x++) {
+				List<MapItem> ll = new LinkedList<MapItem>();
+				if (y+offY>=plain.getTop() && y+offY <=plain.getBottom() && x+offX>= plain.getLeft() && x+offX<= plain.getRight()) {
+					ll.add(FLOOR);
+				} else {
+					ll.add(NOTHING);
+				}
+				items.add(ll);
+			}
 		}
 		
 		setLoaded(true);

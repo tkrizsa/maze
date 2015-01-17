@@ -13,3 +13,4 @@
 OTHER:
 
 * Handle touch screen
+* server should load plains dynamic
