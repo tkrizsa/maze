@@ -1,7 +1,7 @@
 /* ==================================================== MAPS ================================================ */
 
 Maze.prototype.sectionGetServerUrl = function(section) {
-	return 'http://192.168.1.75:8091/testapp';
+	return 'http://localhost:8091/testapp';
 }
 
 Maze.prototype.serverSubscribe = function(section) {
@@ -609,6 +609,12 @@ Maze.Section.prototype.hasClass2 = function(objClass, x, y, borderIsOk) {
 			return true;
 		if (objClass == 'SandFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor'])
 			return true;
+		if (objClass == 'RockFloor' && item.obj.ancestors && item.obj.ancestors['RockFloor2'])
+			return true;
+		if (objClass == 'WaterFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor2'])
+			return true;
+		if (objClass == 'RockFloor2' && item.obj.ancestors && item.obj.ancestors['SnowFloor'])
+			return true;
 		if (objClass == 'RockFloor' && item.obj.ancestors && (item.obj.className == 'TileFloor1' || item.obj.className == 'TileFloor2' || item.obj.className == 'TileFloor3'))
 			return true;
 		item = item.next;
@@ -663,9 +669,10 @@ Maze.Section.prototype.deSerialize = function(result) {
 			xy++;
 		}
 	}
-	this.plain.maze.drawTerrainCorrect(this.plain, 'SandFloor');
-	this.plain.maze.drawTerrainCorrect(this.plain, 'WaterFloor');
-	this.plain.maze.drawTerrainCorrect(this.plain, 'RockFloor');	
+	// this.plain.maze.drawTerrainCorrect(this.plain, 'SandFloor');
+	// this.plain.maze.drawTerrainCorrect(this.plain, 'WaterFloor');
+	// this.plain.maze.drawTerrainCorrect(this.plain, 'RockFloor');	
+	this.plain.maze.drawTerrainCorrectAll(this.plain);	
 	
 	for (var i in saveObjects) {
 		var obj = saveObjects[i];

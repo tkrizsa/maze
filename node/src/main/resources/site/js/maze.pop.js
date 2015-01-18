@@ -500,10 +500,28 @@ Maze.Pop.DrawMenu = function(maze, parent) {
 		maze.draw = {type : 'terrain', terrainClass : 'WaterFloor'};
 	}
 
+	b = new Maze.Pop.ButtonText(this, 'water2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'WaterFloor2'};
+	}
+
 	b = new Maze.Pop.ButtonText(this, 'rock');
 	ttop = (b.top = ttop) + b.height + gap;
 	b.onClick = function() {
 		maze.draw = {type : 'terrain', terrainClass : 'RockFloor'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'rock2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'RockFloor2'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'snow');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'SnowFloor'};
 	}
 
 	b = new Maze.Pop.ButtonText(this, 'grass');
@@ -558,6 +576,97 @@ Maze.Pop.DrawMenu = function(maze, parent) {
 		maze.draw = {type : 'object', objectClass : 'Tree2'};
 	}
 
+	b = new Maze.Pop.ButtonText(this, 'tree3');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'Tree3'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'pine1');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePine1'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'pine2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePine2'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'tree bold 1');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreeBold1'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'tree bold 2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreeBold2'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'tree bold 3');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreeBold3'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'palm 1');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePalm1'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'palm 2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePalm2'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'palm 3');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePalm3'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'palm 4');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'TreePalm4'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'bush1');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'Bush1'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'bush2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'Bush2'};
+	}
+	
+	b = new Maze.Pop.ButtonText(this, 'rock1');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'rock1'};
+	}
+	
+	b = new Maze.Pop.ButtonText(this, 'rock2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'rock2'};
+	}
+	
+	b = new Maze.Pop.ButtonText(this, 'rock3');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'rock3'};
+	}
+	
+	
 
 	b = new Maze.Pop.ButtonText(this, 'remove');
 	ttop = (b.top = ttop) + b.height + gap;

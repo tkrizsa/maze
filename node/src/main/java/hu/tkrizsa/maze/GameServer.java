@@ -26,7 +26,10 @@ public class GameServer {
 		
 		mapItemSingletones.put("SandFloor", 		new MapItemFloor("SandFloor"));
 		mapItemSingletones.put("WaterFloor", 		new MapItemFloor("WaterFloor"));
+		mapItemSingletones.put("WaterFloor2", 		new MapItemFloor("WaterFloor2"));
 		mapItemSingletones.put("RockFloor", 		new MapItemFloor("RockFloor"));
+		mapItemSingletones.put("RockFloor2", 		new MapItemFloor("RockFloor2"));
+		mapItemSingletones.put("SnowFloor", 		new MapItemFloor("SnowFloor"));
 		
 		mapItemSingletones.put("BrickWall1", 		new MapItem("BrickWall1"));
 		mapItemSingletones.put("BrickWall2", 		new MapItem("BrickWall2"));
@@ -34,6 +37,22 @@ public class GameServer {
 		
 		mapItemSingletones.put("Tree1", 			new MapItem("Tree1"));
 		mapItemSingletones.put("Tree2", 			new MapItem("Tree2"));
+		mapItemSingletones.put("Tree3", 			new MapItem("Tree3"));
+		mapItemSingletones.put("TreePine1",			new MapItem("TreePine1"));
+		mapItemSingletones.put("TreePine2",			new MapItem("TreePine2"));
+		mapItemSingletones.put("TreeBold1",			new MapItem("TreeBold1"));
+		mapItemSingletones.put("TreeBold2",			new MapItem("TreeBold2"));
+		mapItemSingletones.put("TreeBold3",			new MapItem("TreeBold3"));
+		mapItemSingletones.put("TreePalm1",			new MapItem("TreePalm1"));
+		mapItemSingletones.put("TreePalm2",			new MapItem("TreePalm2"));
+		mapItemSingletones.put("TreePalm3",			new MapItem("TreePalm3"));
+		mapItemSingletones.put("TreePalm4",			new MapItem("TreePalm4"));
+		mapItemSingletones.put("Bush1",				new MapItem("Bush1"));
+		mapItemSingletones.put("Bush2",				new MapItem("Bush2"));
+		
+		mapItemSingletones.put("Rock1",				new MapItem("Rock1"));
+		mapItemSingletones.put("Rock2",				new MapItem("Rock2"));
+		mapItemSingletones.put("Rock3",				new MapItem("Rock3"));
 	}
 
 	
@@ -202,33 +221,45 @@ public class GameServer {
 		}
 	}
 
-	public void clientMessageDraw(Client client, JsonObject msg) {
-		String key 			= msg.getString("sectionKey");
-		if (key == null) {
-			client.error("key is null");
-			return;
+	public void clientMessageDraw(Client client, JsonObject xmsg) {
+		Map<String, Section> secs = new HashMap<String, Section>();
+		JsonArray jitems = xmsg.getArray("items");
+		for (int j = 0; j < jitems.size(); j++) {
+			JsonObject msg = (JsonObject)jitems.get(j);
+	
+			String key 			= msg.getString("sectionKey");
+			if (key == null) {
+				client.error("key is null");
+				return;
+			}
+			Section section 	= sectionGet(key);
+			if (section == null) {
+				client.error("Invalid section : " + key);
+				return;
+			}
+			
+			if (!section.isLoaded()) {
+				client.error("Section not loaded.");
+				return;
+			}
+			
+			secs.put(section.getKey(), section);
+			
+			Integer x 			= msg.getInteger("x");
+			Integer y 			= msg.getInteger("y");
+			String className	= msg.getString("className");
+			MapItem item		= getSingle(className);
+			if (item == null) {
+				client.error("Class not found : " + className);
+				return;
+			}
+			
+			
+			section.draw(x, y, item);
 		}
-		Section section 	= sectionGet(key);
-		if (section == null) {
-			client.error("Invalid section : " + key);
-			return;
+		for (Section section : secs.values()) {
+			section.drawEnd();
 		}
-		
-		if (!section.isLoaded()) {
-			client.error("Section not loaded.");
-			return;
-		}
-		Integer x 			= msg.getInteger("x");
-		Integer y 			= msg.getInteger("y");
-		String className	= msg.getString("className");
-		MapItem item		= getSingle(className);
-		if (item == null) {
-			client.error("Class not found : " + className);
-			return;
-		}
-		
-		
-		section.draw(x, y, item);
 	}
 	
 	public void clientMessageDig(Client client, JsonObject msg) {
@@ -277,10 +308,12 @@ public class GameServer {
 
 		MapItem caveGate	= new MapItemGate(plainId, x, y);
 		caveSection.draw(4, 3, caveGate);
+		caveSection.drawEnd();
 		
 		
 		MapItem gate		= new MapItemGate(cavePlainId, 4, 3);
 		section.draw(x, y, gate);
+		section.drawEnd();
 	}
 	
 	

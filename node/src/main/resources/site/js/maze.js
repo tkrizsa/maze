@@ -30,7 +30,10 @@ Maze = function(domSelector) {
 	
 	this.SANDFLOOR 		= Maze.Obj.Terrain.createAll(Maze.Obj.SandFloor);
 	this.WATERFLOOR 	= Maze.Obj.Terrain.createAll(Maze.Obj.WaterFloor);
+	this.WATERFLOOR2 	= Maze.Obj.Terrain.createAll(Maze.Obj.WaterFloor2);
 	this.ROCKFLOOR 		= Maze.Obj.Terrain.createAll(Maze.Obj.RockFloor);
+	this.ROCKFLOOR2		= Maze.Obj.Terrain.createAll(Maze.Obj.RockFloor2);
+	this.SNOWFLOOR		= Maze.Obj.Terrain.createAll(Maze.Obj.SnowFloor);
 	
 	this.BRICKWALL1		= new Maze.Obj.BrickWall1();
 	this.BRICKWALL2		= new Maze.Obj.BrickWall2();
@@ -38,6 +41,22 @@ Maze = function(domSelector) {
 	
 	this.TREE1			= new Maze.Obj.Tree1();
 	this.TREE2			= new Maze.Obj.Tree2();
+	this.TREE3			= new Maze.Obj.Tree3();
+	this.TREEPINE1		= new Maze.Obj.TreePine1();
+	this.TREEPINE2		= new Maze.Obj.TreePine2();
+	this.TREEBOLD1		= new Maze.Obj.TreeBold1();
+	this.TREEBOLD2		= new Maze.Obj.TreeBold2();
+	this.TREEBOLD3		= new Maze.Obj.TreeBold3();
+	this.TREEPALM1		= new Maze.Obj.TreePalm1();
+	this.TREEPALM2		= new Maze.Obj.TreePalm2();
+	this.TREEPALM3		= new Maze.Obj.TreePalm3();
+	this.TREEPALM4		= new Maze.Obj.TreePalm4();
+	this.BUSH1			= new Maze.Obj.Bush1();
+	this.BUSH2			= new Maze.Obj.Bush2();
+	
+	this.ROCK1			= new Maze.Obj.Rock1();
+	this.ROCK2			= new Maze.Obj.Rock2();
+	this.ROCK3			= new Maze.Obj.Rock3();
 
 	this.NS = [
 		{x :  0, y : +1},
@@ -280,11 +299,10 @@ Maze.Camera.prototype.setCanvas = function(ctx, canvasLeft, canvasTop, canvasWid
 	this.maze.pop.height = canvasHeight;
 	
 
-	this.images.treex1			= document.getElementById("treex1");
 	this.images.treex2			= document.getElementById("treex2");
+	this.images.rock			= document.getElementById("rock");
 	this.images.basic1			= document.getElementById("items2");
 	this.images.icons1			= document.getElementById("icons1");
-	this.images.effects1   		= document.getElementById("effects1");
 	this.images.terrains1 		= document.getElementById("terrains1");
 }
 
@@ -424,50 +442,50 @@ Maze.Camera.prototype.render = function() {
 					item.obj.trigger('drawIt', this, left, top);
 					
 					// SECTION BORDER
-					var xx = (x + this.centerTileX) % 16;
-					var yy = (y + this.centerTileY) % 16;
-					if (xx==0 || xx == this.maze.SECTION_SIZE - 1 || yy == 0 || yy == this.maze.SECTION_SIZE - 1) {
-						ctx.lineWidth= 1;
-						ctx.strokeStyle = 'rgba(0,0,0,1.0)';
-					}
-					if (xx == 0) {
-						ctx.beginPath();
-						ctx.moveTo(left, top);
-						ctx.lineTo(left, top + this.TILE_HEIGHT);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (xx == this.maze.SECTION_SIZE - 1) {
-						ctx.beginPath();
-						ctx.moveTo(left + this.TILE_WIDTH - 1, top);
-						ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (yy == 0) {
-						ctx.beginPath();
-						ctx.moveTo(left, top);
-						ctx.lineTo(left + this.TILE_WIDTH, top);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (yy == this.maze.SECTION_SIZE - 1) {
-						ctx.beginPath();
-						ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
-						ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (xx==0 && yy==0) {
-						var secX = Math.floor((x + this.centerTileX) / this.maze.SECTION_SIZE);
-						var secY = Math.floor((y + this.centerTileY) / this.maze.SECTION_SIZE);
+					// var xx = (x + this.centerTileX) % 16;
+					// var yy = (y + this.centerTileY) % 16;
+					// if (xx==0 || xx == this.maze.SECTION_SIZE - 1 || yy == 0 || yy == this.maze.SECTION_SIZE - 1) {
+						// ctx.lineWidth= 1;
+						// ctx.strokeStyle = 'rgba(0,0,0,1.0)';
+					// }
+					// if (xx == 0) {
+						// ctx.beginPath();
+						// ctx.moveTo(left, top);
+						// ctx.lineTo(left, top + this.TILE_HEIGHT);
+						// ctx.closePath();
+						// ctx.stroke();						
+					// }
+					// if (xx == this.maze.SECTION_SIZE - 1) {
+						// ctx.beginPath();
+						// ctx.moveTo(left + this.TILE_WIDTH - 1, top);
+						// ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
+						// ctx.closePath();
+						// ctx.stroke();						
+					// }
+					// if (yy == 0) {
+						// ctx.beginPath();
+						// ctx.moveTo(left, top);
+						// ctx.lineTo(left + this.TILE_WIDTH, top);
+						// ctx.closePath();
+						// ctx.stroke();						
+					// }
+					// if (yy == this.maze.SECTION_SIZE - 1) {
+						// ctx.beginPath();
+						// ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
+						// ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
+						// ctx.closePath();
+						// ctx.stroke();						
+					// }
+					// if (xx==0 && yy==0) {
+						// var secX = Math.floor((x + this.centerTileX) / this.maze.SECTION_SIZE);
+						// var secY = Math.floor((y + this.centerTileY) / this.maze.SECTION_SIZE);
 					
 					
-						ctx.font = "12px Arial";
-						ctx.fillStyle = 'rgba(0,0,0,1.0)';
-						ctx.fillText(secX + ", " + secY, left + 3, top + 11);
+						// ctx.font = "12px Arial";
+						// ctx.fillStyle = 'rgba(0,0,0,1.0)';
+						// ctx.fillText(secX + ", " + secY, left + 3, top + 11);
 					
-					}
+					// }
 					
 				}
 				
@@ -608,18 +626,48 @@ Maze.prototype.drawPut = function(mouse) {
 			obj = obj[0];
 		}
 
+		var msgs = {};
+		
 		var section = plain.getSection(mouse.tileX, mouse.tileY);
-		if (!section)
-			return;
 			
 		var msg = {
 			cmd : 'draw',
+			items : []
+		}
+		msg.items.push({
 			className : obj.className,
 			x : mouse.tileX,
 			y : mouse.tileY,
 			sectionKey : section.getKey()
+		});
+		msgs[section.server.url] = msg;
+		
+		if (this.draw.type == 'terrain') {
+			for (var i in this.NS) {
+				var n = this.NS[i];
+				var section = plain.getSection(mouse.tileX+n.x, mouse.tileY+n.y);
+				var msg = msgs[section.server.url];
+				if (!msg) {
+					msg = {
+						cmd : 'draw',
+						items : []
+					}
+					msgs[section.server.url] = msg;
+				}
+				
+				msg.items.push({
+					className : obj.className,
+					x : mouse.tileX+n.x,
+					y : mouse.tileY+n.y,
+					sectionKey : section.getKey()
+				});
+			}
 		}
-		section.server.sock.send(JSON.stringify(msg));
+		for (var url in msgs) {
+			var server = this.servers[url];
+			var msg = msgs[url];
+			server.sock.send(JSON.stringify(msg));
+		}
 	}
 
 
@@ -659,19 +707,15 @@ Maze.prototype.drawTerrain = function(mouse) {
 		var n = this.NS[i];
 		plain.addFloor(objs[0], mouse.tileX + n.x, mouse.tileY + n.y);
 	}
-	this.drawTerrainCorrect(plain, 'SandFloor');
-	this.drawTerrainCorrect(plain, 'WaterFloor');
-	this.drawTerrainCorrect(plain, 'RockFloor');
+	this.drawTerrainCorrectAll(plain);
 }
 
 Maze.prototype.drawFloor = function(mouse) {
 	var plain = this.camera.follow.plain;
 	var obj = this[this.draw.terrainClass.toUpperCase()];
 	plain.addFloor(obj, mouse.tileX, mouse.tileY);
+	this.drawTerrainCorrectAll(plain);
 	
-	this.drawTerrainCorrect(plain, 'SandFloor');
-	this.drawTerrainCorrect(plain, 'WaterFloor');
-	this.drawTerrainCorrect(plain, 'RockFloor');
 }
 
 Maze.prototype.drawObject = function(mouse) {
@@ -680,6 +724,15 @@ Maze.prototype.drawObject = function(mouse) {
 	plain.addObject(obj, mouse.tileX, mouse.tileY);
 }
 
+
+Maze.prototype.drawTerrainCorrectAll = function(plain) {
+	this.drawTerrainCorrect(plain, 'SandFloor');
+	this.drawTerrainCorrect(plain, 'WaterFloor');
+	this.drawTerrainCorrect(plain, 'WaterFloor2');
+	this.drawTerrainCorrect(plain, 'RockFloor');
+	this.drawTerrainCorrect(plain, 'RockFloor2');
+	this.drawTerrainCorrect(plain, 'SnowFloor');
+}
 
 Maze.prototype.drawTerrainCorrect = function(plain, terrainClass) {
 	var objs = this[terrainClass.toUpperCase()];

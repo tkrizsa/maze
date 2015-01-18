@@ -15,9 +15,13 @@ Maze.Obj.Gate = function(maze, targetPlainId, targetX, targetY) {
 	this.targetX = targetX;
 	this.targetY = targetY;
 	
-	this.sourceLeft = 2 * 48; 
-	this.sourceTop = 9; 
-	this.sourceHeight = 87; 
+	
+	this.imageid = 'rock';
+	this.sourceLeft = 347;
+	this.sourceTop = 8;
+	this.sourceWidth = 152;
+	this.sourceHeight = 152;
+	this.selfZoom = 0.8;
 }
 
 Maze.Obj.Gate.prototype.setMapData = function(data) {

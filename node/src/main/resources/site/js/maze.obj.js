@@ -124,9 +124,20 @@ Maze.Obj.Imaged.extend = function(obj, maze) {
 }
 
 Maze.Obj.Imaged.ImagedDrawIt = function(cam, left, top) {
-	var ww = this.selfZoom;
+
+	var ww = this.sourceWidth / 48 * this.selfZoom;
 	var hh = ww / this.sourceWidth * this.sourceHeight;
 	
+	// cam.ctx.drawImage(cam.images[this.imageid], 
+		// this.sourceLeft, 
+		// this.sourceTop, 
+		// this.sourceWidth, 
+		// this.sourceHeight, 
+		// left  - cam.TILE_WIDTH * ((ww-1) / 2), 
+		// top - cam.TILE_HEIGHT * (hh-1), 
+		// cam.TILE_WIDTH * ww, 
+		// cam.TILE_HEIGHT * hh
+	// );
 	cam.ctx.drawImage(cam.images[this.imageid], 
 		this.sourceLeft, 
 		this.sourceTop, 
@@ -252,6 +263,14 @@ Maze.Obj.WaterFloor = function(i) {
 	this.className = 'WaterFloor';
 };
 
+Maze.Obj.WaterFloor2 = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 5, 10, i);
+	this.ancestors.Floor = true;
+	this.ancestors.WaterFloor2 = true;
+	this.blocking = true;
+	this.className = 'WaterFloor2';
+};
+
 Maze.Obj.RockFloor = function(i) {
 	Maze.Obj.Terrain.extend(this, 'terrains1', 0, 5, i);
 	this.ancestors.Floor = true;
@@ -259,6 +278,19 @@ Maze.Obj.RockFloor = function(i) {
 	this.className = 'RockFloor';
 };
 
+Maze.Obj.RockFloor2 = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 5, 5, i);
+	this.ancestors.Floor = true;
+	this.ancestors.RockFloor2 = true;
+	this.className = 'RockFloor2';
+};
+
+Maze.Obj.SnowFloor = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 0, 10, i);
+	this.ancestors.Floor = true;
+	this.ancestors.SnowFloor = true;
+	this.className = 'SnowFloor';
+};
 
 // ===================================== PLAYBACKFLOOR ======================================
 Maze.Obj.PlaybackFloor = function() {
@@ -327,20 +359,12 @@ Maze.Obj.Tree1 = function() {
 	this.blocking = true;
 	this.drawPhase = 1;
 	
-	this.imageid = 'treex1';
-	this.sourceLeft = 0;
-	this.sourceTop = 0;
-	this.sourceWidth = 203;
-	this.sourceHeight = 368;
-	this.selfZoom = 3;
-	
-	
 	this.imageid = 'treex2';
 	this.sourceLeft = 19;
 	this.sourceTop = 8;
 	this.sourceWidth = 117;
 	this.sourceHeight = 139;
-	this.selfZoom = 3.5;
+	this.selfZoom = 1.5;
 };
 
 Maze.Obj.Tree2 = function() {
@@ -352,11 +376,253 @@ Maze.Obj.Tree2 = function() {
 	this.drawPhase = 1;
 	
 	this.imageid = 'treex2';
+	this.sourceLeft = 149;
+	this.sourceTop = 13;
+	this.sourceWidth = 101;
+	this.sourceHeight = 133;
+	this.selfZoom = 1.5;
+
+};
+
+Maze.Obj.Tree3 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Tree3';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 269;
+	this.sourceTop = 16;
+	this.sourceWidth = 92;
+	this.sourceHeight = 128;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePine1 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePine1';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 387;
+	this.sourceTop = 18;
+	this.sourceWidth = 82;
+	this.sourceHeight = 132;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePine2 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePine2';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 484;
+	this.sourceTop = 53;
+	this.sourceWidth = 62;
+	this.sourceHeight = 91;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreeBold1 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreeBold1';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 30;
+	this.sourceTop = 156;
+	this.sourceWidth = 89;
+	this.sourceHeight = 115;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreeBold2 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreeBold2';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 159;
+	this.sourceTop = 155;
+	this.sourceWidth = 81;
+	this.sourceHeight = 121;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreeBold3 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreeBold3';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 277;
+	this.sourceTop = 163;
+	this.sourceWidth = 68;
+	this.sourceHeight = 113;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePalm1 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePalm1';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 369;
+	this.sourceTop = 156;
+	this.sourceWidth = 151;
+	this.sourceHeight = 144;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePalm2 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePalm2';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 548;
+	this.sourceTop = 158;
+	this.sourceWidth = 98;
+	this.sourceHeight = 139;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePalm3 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePalm3';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 31;
+	this.sourceTop = 296;
+	this.sourceWidth = 98;
+	this.sourceHeight = 139;
+	this.selfZoom = 1.5;
+};
+
+Maze.Obj.TreePalm4 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'TreePalm4';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 158;
+	this.sourceTop = 300;
+	this.sourceWidth = 159;
+	this.sourceHeight = 135;
+	this.selfZoom = 1.5;
+};
+
+
+Maze.Obj.Bush1 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Bush1';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
+	this.sourceLeft = 357;
+	this.sourceTop = 362;
+	this.sourceWidth = 53;
+	this.sourceHeight = 41;
+	this.selfZoom = 2;
+};
+
+Maze.Obj.Bush2 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Bush2';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'treex2';
 	this.sourceLeft = 421;
 	this.sourceTop = 359;
 	this.sourceWidth = 69;
 	this.sourceHeight = 44;
 	this.selfZoom = 2;
+};
+
+Maze.Obj.Rock1 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Rock1';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'rock';
+	this.sourceLeft = 13;
+	this.sourceTop = 11;
+	this.sourceWidth = 154;
+	this.sourceHeight = 148;
+	this.selfZoom = 0.8;
+};
+
+Maze.Obj.Rock2 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Rock2';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'rock';
+	this.sourceLeft = 175;
+	this.sourceTop = 10;
+	this.sourceWidth = 165;
+	this.sourceHeight = 157;
+	this.selfZoom = 0.8;
+};
+
+Maze.Obj.Rock3 = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'Rock3';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'rock';
+	this.sourceLeft = 21;
+	this.sourceTop = 176;
+	this.sourceWidth = 32;
+	this.sourceHeight = 34;
+	this.selfZoom = 0.8;
 };
 
 // ===================================== FIGHT PLACE ======================================

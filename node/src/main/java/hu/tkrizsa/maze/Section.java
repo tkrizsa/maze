@@ -159,6 +159,9 @@ public class Section {
 			ll.add(item);
 		}
 		
+	}
+	
+	public void drawEnd() {
 		subscribersNotify(true);
 		save();
 	}
