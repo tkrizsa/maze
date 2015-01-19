@@ -247,12 +247,21 @@ Maze.Obj.TileFloor3 = function() {
 	this.className = 'TileFloor3';
 };
 
+// ===================================== TERRAIN ======================================
+
 
 Maze.Obj.SandFloor = function(i) {
 	Maze.Obj.Terrain.extend(this, 'terrains1', 0, 0, i);
 	this.ancestors.Floor = true;
 	this.ancestors.SandFloor = true;
 	this.className = 'SandFloor';
+};
+
+Maze.Obj.SandFloor2 = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 10, 0, i);
+	this.ancestors.Floor = true;
+	this.ancestors.SandFloor2 = true;
+	this.className = 'SandFloor2';
 };
 
 Maze.Obj.WaterFloor = function(i) {
@@ -290,6 +299,27 @@ Maze.Obj.SnowFloor = function(i) {
 	this.ancestors.Floor = true;
 	this.ancestors.SnowFloor = true;
 	this.className = 'SnowFloor';
+};
+
+Maze.Obj.SwampFloor = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 0, 15, i);
+	this.ancestors.Floor = true;
+	this.ancestors.SwampFloor = true;
+	this.className = 'SwampFloor';
+};
+
+Maze.Obj.SwampFloor2 = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 5, 15, i);
+	this.ancestors.Floor = true;
+	this.ancestors.SwampFloor2 = true;
+	this.className = 'SwampFloor2';
+};
+
+Maze.Obj.SwampWaterFloor = function(i) {
+	Maze.Obj.Terrain.extend(this, 'terrains1', 10, 15, i);
+	this.ancestors.Floor = true;
+	this.ancestors.SwampWaterFloor = true;
+	this.className = 'SwampWaterFloor';
 };
 
 // ===================================== PLAYBACKFLOOR ======================================

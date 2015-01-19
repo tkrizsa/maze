@@ -21,13 +21,14 @@ public class NodeMain extends Verticle {
 		final JsonObject appConfig = container.config();
  
 		logger.info("MAZE START...");
+		logger.info(appConfig.toString());
 		
 		container.deployModule("com.insanitydesign~vertx-mod-cassandra-persistor~0.4.1", appConfig.getObject("cassandra"),  
 			new AsyncResultHandler<String>() {
 				public void handle(AsyncResult<String> asyncResult) {
 					if (asyncResult.succeeded()) {
 						container.deployVerticle("hu.tkrizsa.maze.WebServer", appConfig.getObject("webserver"));
-						container.deployVerticle("hu.tkrizsa.maze.SocketServer", appConfig.getObject("socketserver"));
+						container.deployVerticle("hu.tkrizsa.maze.SocketServer", appConfig.getObject("gameserver"));
 						
 					} else {
 						asyncResult.cause().printStackTrace();

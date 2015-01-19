@@ -23,6 +23,8 @@ public class SocketServer extends Verticle {
 		final Logger logger = container.logger();
 		final EventBus eventBus = vertx.eventBus();
 		final GameServer game = new GameServer(eventBus);
+		final JsonObject appConfig = container.config();
+		System.out.println(appConfig.toString());
 		
 		HttpServer server = vertx.createHttpServer();
 
@@ -76,7 +78,7 @@ public class SocketServer extends Verticle {
 			}
 		});
 	
-		server.listen(8091);	
+		server.listen(appConfig.getInteger("port"));	
 	
 
 	}

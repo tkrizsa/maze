@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8 />
+	<title>Maze</title>
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="css/jquery-ui/jquery-ui-1.10.4.custom.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/base.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/site.css" />
+	
+	
+	
+</head>
+<body>
+
+<div class="header">
+	<div class="container row-3 tablet-row-3 mobile-row-1 navbar">
+		<div class="clear mobile-text-center">
+			<a href="/" class="logo left mobile-no-float uppercase"><span class="icon"></span>Civillage</a>
+			<ul class="navigation list-inline right mobile-full mobile-container-full">
+				<li><a href="/game.html">Game</a></li>
+				<li><a href="/">High scores</a></li>
+				<li><a href="/">Rules</a></li>
+				<li><a href="/">Coming</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="container mobile-container-full">
+		<div class="row-2 clear mobile-row">
+			<div class="left col-8 tablet-col-6 mobile-full mobile-container mobile-text-center">
+				<h1 class="h2">Civillage</h1>
+					<p class="font-light col-11 tablet-col-12">
+					Welcome to the civillage!
+					</p>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+
+<div class="grey-row" id="headings">
+	<div class="container row-2 font-light">
+		<div class="clear row mobile-row tablet-text-left mobile-text-left">
+			<canvas id="gamecanvas" width="940" height="700" ></canvas>
+		</div>
+	</div>
+</div>
+
+	
+	
+	  
+	  <textarea id='mapdata' style="display:none;">
+{"objects":["GrassFloor","SandFloor","Tree1","Tree2","BrickWall3","WaterFloor","TileFloor3","TileFloor1","BrickWall1","RockFloor"],"map":[[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0,2],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[1],[0,3],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0,2],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0,3],[0],[0,3],[0],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[0],[0],[0],[0],[0],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0,4],[0,4],[0,4],[0,4],[5],[5,2],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0,4],[6],[6],[0,4],[5],[5],[1,3],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[6],[6],[6],[0,4],[5],[5],[1],[1],[0],[0],[0],[0,2],[0],[0,2],[0],[0,3],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[6],[6],[6],[0,4],[5],[5],[1],[1],[0],[0],[0],[0],[0],[0],[7,8],[7,8],[7,8],[7,8],[7,8],[7,8],[7,8],[7],[7,8],[0],[0],[0],[0],[0],[0],[0],[0,4],[0,4],[0,4],[0,4],[5],[5],[0],[0],[0],[0],[0],[0],[0],[0],[7,8],[7],[7],[7],[7],[7],[7],[7],[7,8],[0],[0],[0],[0],[0],[0,2],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[7,8],[7],[7],[7],[7],[7],[7],[7],[7,8],[0],[0],[0],[0],[0],[0,3],[0],[0],[0],[0],[0],[1],[1,2],[0],[0],[0],[0],[0],[0],[0],[0],[7,8],[7,8],[7,8],[7],[7,8],[7,8],[7,8],[7,8],[7,8],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0,3],[0],[0],[0,3],[0],[7,8],[6],[6],[6],[6],[6],[6],[6],[7,8],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[7,8],[6],[6],[6],[6],[6],[6],[6],[7,8],[0],[0,3],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[7,8],[6],[6],[6],[6],[6],[6],[6],[7,8],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0,2],[0],[0],[0],[0,3],[0],[0],[0],[9],[9],[7,8],[6],[7,8],[7,8],[7,8],[7,8],[7,8],[7,8],[7,8],[0],[0,2],[0],[0],[0],[0],[0],[0],[0],[0],[0],[9,3],[9],[9],[9],[9],[9],[9],[9],[9],[9],[6],[6],[6],[9],[0],[0],[0],[0,3],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9,3],[9],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0,2],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[0],[0],[0,2],[0],[0],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[1],[1],[1],[1],[0],[0],[0,2],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[9],[9],[0],[0],[0],[0],[0],[1],[1],[1],[1],[1],[5],[5,2],[5],[5],[1],[1],[1],[0],[0,3],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[9],[0],[0],[0],[1],[1],[1],[1],[1],[5,3],[5],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[9],[9],[9],[0],[0],[1],[1],[1],[1],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[1],[5],[5],[5],[5],[5],[5],[5],[5],[1],[5],[5],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[1],[0],[0],[0],[0],[1],[1],[1],[1],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[1],[5],[5],[5],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[0],[0],[5],[5],[5],[5,2],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[1],[1],[1],[1],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[5],[1,3],[1],[1],[1]]}
+	  </textarea>
+
+	  <div style="display:none;">
+		<img src="img/treex2.png" id="treex2" />
+		<img src="img/rock.png" id="rock" />
+		<img src="img/terrains1.png" id="terrains1" />
+		<img src="img/items2.png" id="items2" />
+		<img src="img/icons.png" id="icons1" />
+	  </div>
+	  
+
+
+	<script type="text/javascript" src="lib/jquery-2.1.1.js"></script>
+	<script type="text/javascript" src="lib/jquery.mousewheel.js"></script>
+	<script type="text/javascript" src="lib/jquery-ui-1.10.4.custom.js"></script>
+	<script src="http://cdn.sockjs.org/sockjs-0.3.4.min.js"></script>
+
+	<script type="text/javascript" src="js/maze.js"></script>
+	<script type="text/javascript" src="js/maze.map.js"></script>
+	<script type="text/javascript" src="js/maze.events.js"></script>
+	<script type="text/javascript" src="js/maze.pop.js"></script>
+	<script type="text/javascript" src="js/maze.obj.js"></script>
+	<script type="text/javascript" src="js/maze.obj.walker.js"></script>
+	<script type="text/javascript" src="js/maze.obj.animated.js"></script>
+	<script type="text/javascript" src="js/maze.obj.gate.js"></script>
+	<script type="text/javascript" src="js/maze.obj.hero.js"></script>
+
+	
+<script type="text/javascript" charset="utf-8">
+
+$(function() {
+
+			function resized() {
+				var gc = $('#gamecanvas');
+				var width = $(window).width();
+				if (width > 940)
+					width = 940;
+				gc.attr("width", width);
+				//gc.attr("height", $(window).height()-20);
+				
+			}
+			$(window).resize(resized);
+			resized();
+
+        
+		  var maze = new Maze('gamecanvas');
+		  
+		  maze.start();
+		  
+			$('#gamecanvas').mousemove(function(e) {
+			maze.camera.mouseMove(
+				(e.offsetX || e.clientX - $(e.target).offset().left + window.pageXOffset),
+				(e.offsetY || e.clientY - $(e.target).offset().top + window.pageYOffset)
+			);
+		  });
+		  $('#gamecanvas').mouseleave(function(e) {
+			maze.camera.mouseLeave();
+		  });
+		  $('#gamecanvas').click(function(e) {
+			e.preventDefault();
+			maze.camera.mouseClick();
+		  });
+		  
+			$('#gamecanvas').mousewheel(function(event, delta) {
+				event.preventDefault();
+				maze.camera.wheelZoom(delta);
+			});		  
+			$('#gamecanvas').dblclick(function(event) {
+				event.preventDefault();
+			});		  
+		
+});
+</script>
+</body>
+</html>
+

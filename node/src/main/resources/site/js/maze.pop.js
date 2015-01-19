@@ -494,6 +494,12 @@ Maze.Pop.DrawMenu = function(maze, parent) {
 		maze.draw = {type : 'terrain', terrainClass : 'SandFloor'};
 	}
 
+	b = new Maze.Pop.ButtonText(this, 'sand2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'SandFloor2'};
+	}
+
 	b = new Maze.Pop.ButtonText(this, 'water');
 	ttop = (b.top = ttop) + b.height + gap;
 	b.onClick = function() {
@@ -528,6 +534,24 @@ Maze.Pop.DrawMenu = function(maze, parent) {
 	ttop = (b.top = ttop) + b.height + gap;
 	b.onClick = function() {
 		maze.draw = {type : 'floor', terrainClass : 'GrassFloor'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'swamp');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'SwampFloor'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'swamp2');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'SwampFloor2'};
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'swamp water');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'terrain', terrainClass : 'SwampWaterFloor'};
 	}
 
 	b = new Maze.Pop.ButtonText(this, 'tile1');

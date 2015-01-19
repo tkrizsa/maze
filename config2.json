@@ -4,12 +4,12 @@
 		"web_root": "./site/",
 		"index_page": "index.html",
 		"host": "0.0.0.0",
-		"port": 8090
+		"port": 8092
 	},
-
+	
 	"gameserver" : {
 		"host": "0.0.0.0",
-		"port": 8091
+		"port": 8093
 	},
 	
 	"cassandra" : {

@@ -25,11 +25,15 @@ public class GameServer {
 		mapItemSingletones.put("TileFloor3", 		new MapItemFloor("TileFloor3"));
 		
 		mapItemSingletones.put("SandFloor", 		new MapItemFloor("SandFloor"));
+		mapItemSingletones.put("SandFloor2", 		new MapItemFloor("SandFloor2"));
 		mapItemSingletones.put("WaterFloor", 		new MapItemFloor("WaterFloor"));
 		mapItemSingletones.put("WaterFloor2", 		new MapItemFloor("WaterFloor2"));
 		mapItemSingletones.put("RockFloor", 		new MapItemFloor("RockFloor"));
 		mapItemSingletones.put("RockFloor2", 		new MapItemFloor("RockFloor2"));
 		mapItemSingletones.put("SnowFloor", 		new MapItemFloor("SnowFloor"));
+		mapItemSingletones.put("SwampFloor", 		new MapItemFloor("SwampFloor"));
+		mapItemSingletones.put("SwampFloor2", 		new MapItemFloor("SwampFloor2"));
+		mapItemSingletones.put("SwampWaterFloor", 		new MapItemFloor("SwampWaterFloor"));
 		
 		mapItemSingletones.put("BrickWall1", 		new MapItem("BrickWall1"));
 		mapItemSingletones.put("BrickWall2", 		new MapItem("BrickWall2"));

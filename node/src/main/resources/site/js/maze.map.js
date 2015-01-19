@@ -1,7 +1,10 @@
 /* ==================================================== MAPS ================================================ */
 
 Maze.prototype.sectionGetServerUrl = function(section) {
-	return 'http://localhost:8091/testapp';
+	if (section.offX >= 0)
+		return 'http://localhost:8091/testapp';
+	else
+		return 'http://localhost:8093/testapp';
 }
 
 Maze.prototype.serverSubscribe = function(section) {
@@ -607,14 +610,13 @@ Maze.Section.prototype.hasClass2 = function(objClass, x, y, borderIsOk) {
 	while (item != null) {
 		if (item.obj.ancestors && item.obj.ancestors[objClass])
 			return true;
-		if (objClass == 'SandFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor'])
-			return true;
-		if (objClass == 'RockFloor' && item.obj.ancestors && item.obj.ancestors['RockFloor2'])
-			return true;
-		if (objClass == 'WaterFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor2'])
-			return true;
-		if (objClass == 'RockFloor2' && item.obj.ancestors && item.obj.ancestors['SnowFloor'])
-			return true;
+		if (objClass == 'SwampFloor2' && item.obj.ancestors && item.obj.ancestors['SwampWaterFloor']) return true;
+		if (objClass == 'SwampFloor' && item.obj.ancestors && item.obj.ancestors['SwampFloor2']) return true;
+		if (objClass == 'SandFloor' && item.obj.ancestors && item.obj.ancestors['SandFloor2']) return true;
+		if (objClass == 'SandFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor']) 	return true;
+		if (objClass == 'RockFloor' && item.obj.ancestors && item.obj.ancestors['RockFloor2'])	return true;
+		if (objClass == 'WaterFloor' && item.obj.ancestors && item.obj.ancestors['WaterFloor2'])	return true;
+		if (objClass == 'RockFloor2' && item.obj.ancestors && item.obj.ancestors['SnowFloor'])			return true;
 		if (objClass == 'RockFloor' && item.obj.ancestors && (item.obj.className == 'TileFloor1' || item.obj.className == 'TileFloor2' || item.obj.className == 'TileFloor3'))
 			return true;
 		item = item.next;
