@@ -61,6 +61,8 @@ Maze = function(domSelector) {
 	this.ROCK1			= new Maze.Obj.Rock1();
 	this.ROCK2			= new Maze.Obj.Rock2();
 	this.ROCK3			= new Maze.Obj.Rock3();
+	
+	this.SCHOOL			= new Maze.Obj.School();
 
 	this.NS = [
 		{x :  0, y : +1},
@@ -83,7 +85,7 @@ Maze = function(domSelector) {
 	this.currPlayerServer = false;
 	this.plains = {};					// list of plains referenced by plainId
 	
-	
+
 	
 	this.objs = new Array();
 
@@ -117,8 +119,6 @@ Maze = function(domSelector) {
 		
 	// pops
 	this.pop = new Maze.Pop.Main(this);
-	//new Maze.Pop.PoseEditor(this, this.pop, this.hero, this.hero.animations.step);	
-	//new Maze.Pop.DrawMenu(this, this.pop);	
 	
 	
 
@@ -290,6 +290,8 @@ Maze.Camera = function(maze) {
 		tileX : 0,
 		tileY : 0
 	}
+	
+	this.drawSectionGrid = false;
 }
 
 Maze.Camera.prototype.setCanvas = function(ctx, canvasLeft, canvasTop, canvasWidth, canvasHeight) {
@@ -308,6 +310,7 @@ Maze.Camera.prototype.setCanvas = function(ctx, canvasLeft, canvasTop, canvasWid
 	this.images.basic1			= document.getElementById("items2");
 	this.images.icons1			= document.getElementById("icons1");
 	this.images.terrains1 		= document.getElementById("terrains1");
+	this.images.school 			= document.getElementById("school");
 }
 
 
@@ -446,51 +449,52 @@ Maze.Camera.prototype.render = function() {
 					item.obj.trigger('drawIt', this, left, top);
 					
 					//SECTION BORDER
-					var xx = (x + this.centerTileX) % 16;
-					var yy = (y + this.centerTileY) % 16;
-					if (xx==0 || xx == this.maze.SECTION_SIZE - 1 || yy == 0 || yy == this.maze.SECTION_SIZE - 1) {
-						ctx.lineWidth= 1;
-						ctx.strokeStyle = 'rgba(0,0,0,1.0)';
+					if (this.drawSectionGrid) {
+						var xx = (x + this.centerTileX) % 16;
+						var yy = (y + this.centerTileY) % 16;
+						if (xx==0 || xx == this.maze.SECTION_SIZE - 1 || yy == 0 || yy == this.maze.SECTION_SIZE - 1) {
+							ctx.lineWidth= 1;
+							ctx.strokeStyle = 'rgba(0,0,0,1.0)';
+						}
+						if (xx == 0) {
+							ctx.beginPath();
+							ctx.moveTo(left, top);
+							ctx.lineTo(left, top + this.TILE_HEIGHT);
+							ctx.closePath();
+							ctx.stroke();						
+						}
+						if (xx == this.maze.SECTION_SIZE - 1) {
+							ctx.beginPath();
+							ctx.moveTo(left + this.TILE_WIDTH - 1, top);
+							ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
+							ctx.closePath();
+							ctx.stroke();						
+						}
+						if (yy == 0) {
+							ctx.beginPath();
+							ctx.moveTo(left, top);
+							ctx.lineTo(left + this.TILE_WIDTH, top);
+							ctx.closePath();
+							ctx.stroke();						
+						}
+						if (yy == this.maze.SECTION_SIZE - 1) {
+							ctx.beginPath();
+							ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
+							ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
+							ctx.closePath();
+							ctx.stroke();						
+						}
+						if (xx==0 && yy==0) {
+							var secX = Math.floor((x + this.centerTileX) / this.maze.SECTION_SIZE);
+							var secY = Math.floor((y + this.centerTileY) / this.maze.SECTION_SIZE);
+						
+						
+							ctx.font = "12px Arial";
+							ctx.fillStyle = 'rgba(0,0,0,1.0)';
+							ctx.fillText(secX + ", " + secY, left + 3, top + 11);
+						
+						}
 					}
-					if (xx == 0) {
-						ctx.beginPath();
-						ctx.moveTo(left, top);
-						ctx.lineTo(left, top + this.TILE_HEIGHT);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (xx == this.maze.SECTION_SIZE - 1) {
-						ctx.beginPath();
-						ctx.moveTo(left + this.TILE_WIDTH - 1, top);
-						ctx.lineTo(left + this.TILE_WIDTH - 1, top + this.TILE_HEIGHT);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (yy == 0) {
-						ctx.beginPath();
-						ctx.moveTo(left, top);
-						ctx.lineTo(left + this.TILE_WIDTH, top);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (yy == this.maze.SECTION_SIZE - 1) {
-						ctx.beginPath();
-						ctx.moveTo(left, top + this.TILE_HEIGHT - 1);
-						ctx.lineTo(left + this.TILE_WIDTH, top + this.TILE_HEIGHT - 1);
-						ctx.closePath();
-						ctx.stroke();						
-					}
-					if (xx==0 && yy==0) {
-						var secX = Math.floor((x + this.centerTileX) / this.maze.SECTION_SIZE);
-						var secY = Math.floor((y + this.centerTileY) / this.maze.SECTION_SIZE);
-					
-					
-						ctx.font = "12px Arial";
-						ctx.fillStyle = 'rgba(0,0,0,1.0)';
-						ctx.fillText(secX + ", " + secY, left + 3, top + 11);
-					
-					}
-					
 				}
 				
 				item = item.next;

@@ -781,4 +781,20 @@ Maze.Obj.Blood2 = function() {
 
 
 
+// ===================================== BUILDINGS ======================================
 
+Maze.Obj.School = function() {
+	Maze.Obj.extend(this);
+	Maze.Obj.Imaged.extend(this);
+	this.className = 'School';
+
+	this.blocking = true;
+	this.drawPhase = 1;
+	
+	this.imageid = 'school';
+	this.sourceLeft = 0;
+	this.sourceTop = 0;
+	this.sourceWidth = 300;
+	this.sourceHeight = 153;
+	this.selfZoom = 1.6;
+};

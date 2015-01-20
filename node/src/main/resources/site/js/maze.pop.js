@@ -208,6 +208,13 @@ Maze.Pop.Main = function(maze) {
 		style : 'transparent'
 	});
 	
+	this.poseEditor = new Maze.Pop.PoseEditor(this.maze, this, this.maze.hero, this.maze.hero.animations.step);	
+	this.drawMenu = new Maze.Pop.DrawMenu(this.maze, this);	
+	
+	this.poseEditor.hidden = true;
+	this.drawMenu.hidden = true;
+	
+	
 	
 	this.musicButton = new Maze.Pop.ButtonText(this, 'Music');
 	this.musicButton.left = 800;
@@ -237,15 +244,31 @@ Maze.Pop.Main = function(maze) {
 		}
 	}
 	
-	this.exportButton = new Maze.Pop.ButtonText(this, 'Export');
-	this.exportButton.left = 740;
-	this.exportButton.top = 5;
-	this.exportButton.width = 60;
-	this.exportButton.color = '#e0e0e0';
-	this.exportButton.onClick = function() {
-		var mapData = maze.hero.plain.serialize();
-		$('#mapdata').html(mapData);
+	this.drawButton = new Maze.Pop.ButtonText(this, 'Draw');
+	this.drawButton.left = 740;
+	this.drawButton.top = 5;
+	this.drawButton.width = 60;
+	this.drawButton.color = '#e0e0e0';
+	this.drawButton.onClick = function() {
+		thisPop.drawMenu.hidden = !thisPop.drawMenu.hidden;
 	}
+	
+	this.gridButton = new Maze.Pop.ButtonText(this, 'Grid');
+	this.gridButton.left = 680;
+	this.gridButton.top = 5;
+	this.gridButton.width = 60;
+	this.gridButton.color = '#e0e0e0';
+	this.gridButton.onClick = function() {
+		thisPop.maze.camera.drawSectionGrid = !thisPop.maze.camera.drawSectionGrid;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	this.cmdDigButton = new Maze.Pop.ButtonText(this, 'Dig');
@@ -486,6 +509,12 @@ Maze.Pop.DrawMenu = function(maze, parent) {
 	ttop = (b.top = ttop) + b.height + gap;
 	b.onClick = function() {
 		maze.draw = false;
+	}
+
+	b = new Maze.Pop.ButtonText(this, 'school');
+	ttop = (b.top = ttop) + b.height + gap;
+	b.onClick = function() {
+		maze.draw = {type : 'object', objectClass : 'School'};
 	}
 
 	b = new Maze.Pop.ButtonText(this, 'sand');

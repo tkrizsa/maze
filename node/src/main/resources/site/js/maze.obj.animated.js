@@ -535,21 +535,21 @@ Maze.Obj.Animated.init = function() {
 	this.addCircle(16, this.headRad, this.headColor);
 
 	
-	this.addLine(15,17); // sword
-	this.parts[17].strokeStyle = this.swordColor;
+	// this.addLine(15,17); // sword
+	// this.parts[17].strokeStyle = this.swordColor;
 
 
-	var c = 'brown';
-	this.addRectangle(24, 25, 26, 27, '#888888'); // shield
-	this.addLine(24, 25); // shield
-	this.addLine(25, 26); // shield
-	this.addLine(26, 27); // shield
-	this.addLine(27, 24); // shield
-	var c = '#555555';
-	this.parts[19].strokeStyle = c;
-	this.parts[20].strokeStyle = c;
-	this.parts[21].strokeStyle = c;
-	this.parts[22].strokeStyle = c;
+	// var c = 'brown';
+	// this.addRectangle(24, 25, 26, 27, '#888888'); // shield
+	// this.addLine(24, 25); // shield
+	// this.addLine(25, 26); // shield
+	// this.addLine(26, 27); // shield
+	// this.addLine(27, 24); // shield
+	// var c = '#555555';
+	// this.parts[19].strokeStyle = c;
+	// this.parts[20].strokeStyle = c;
+	// this.parts[21].strokeStyle = c;
+	// this.parts[22].strokeStyle = c;
 	
 	
 	 

@@ -57,6 +57,8 @@ public class GameServer {
 		mapItemSingletones.put("Rock1",				new MapItem("Rock1"));
 		mapItemSingletones.put("Rock2",				new MapItem("Rock2"));
 		mapItemSingletones.put("Rock3",				new MapItem("Rock3"));
+		
+		mapItemSingletones.put("School",			new MapItem("School"));
 	}
 
 	
