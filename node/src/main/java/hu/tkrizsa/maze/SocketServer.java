@@ -36,16 +36,16 @@ public class SocketServer extends Verticle {
 
 		SockJSServer sockServer = vertx.createSockJSServer(server);
 
-		sockServer.installApp(new JsonObject().putString("prefix", "/testapp"), new Handler<SockJSSocket>() {
+		sockServer.installApp(new JsonObject().putString("prefix", "/mazemaps"), new Handler<SockJSSocket>() {
 			public void handle(final SockJSSocket sock) {
-				logger.info("socket created..");
+				//logger.info("socket created..");
 				final Client client = new Client(game, sock);
 				
 			
 				sock.dataHandler(new Handler<Buffer>() {
 					public void handle(Buffer data) {
-						logger.info("socket incoming data..");
-						logger.info(data.toString());
+						// logger.info("socket incoming data..");
+						// logger.info(data.toString());
 						
 						JsonObject msg;
 						try {

@@ -1,5 +1,6 @@
 package hu.tkrizsa.maze;
 
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.eventbus.EventBus;
@@ -83,11 +84,18 @@ public class GameServer {
 	}
 	
 	public MapItem getMapItem(String className) {
-		if ("Gate".equals(className)) {
-			return new MapItemGate();
-		} else {
+				if ("Gate".equals(className)) {return new MapItemGate();} 
+		else	if ("Farm".equals(className)) {return new MapItemFarm(this);} 
+		else {
 			return getSingle(className);
 		}
+	}
+	
+	public MapItemBuilding getMapItemBuilding(String className) {
+		MapItem mi = getMapItem(className);
+		if (mi == null || !(mi instanceof MapItemBuilding))
+			return null;
+		return (MapItemBuilding)mi;
 	}
 	
 	public void clientConnected(Client client) {
@@ -108,6 +116,8 @@ public class GameServer {
 			clientMessageDraw(client, msg);
 		} else if ("dig".equals(cmd)) {
 			clientMessageDig(client, msg);
+		} else if ("build".equals(cmd)) {
+			clientMessageBuild(client, msg);
 		} else {
 			client.error("unknown command : " + cmd);
 		
@@ -116,7 +126,7 @@ public class GameServer {
 	
 	
 
-	public void clientMessageInit(Client client, JsonObject msg) {
+	public void clientMessageInit(final Client client, JsonObject msg) {
 	
 
 	
@@ -146,6 +156,33 @@ public class GameServer {
 					asec.removeAway(playerId);
 				}
 			}
+			
+			JsonObject plget = new JsonObject();
+			plget.putString("playerId", playerId);
+			
+			/*eventBus.sendWithTimeout("getplayer", plget, 1000, new Handler<AsyncResult<Message<JsonObject>>>() {
+				public void handle(AsyncResult<Message<JsonObject>> result) {
+					if (result.succeeded()) {
+						System.out.println("I received a reply " + result.result());
+					} else {
+						System.err.println("No reply was received before the 1 second timeout!");
+						System.err.println(result.cause().toString());
+						System.err.println(result.cause().getMessage());
+						result.cause().printStackTrace();
+					}
+				}
+			});*/
+			eventBus.send("getplayer", plget, new Handler<Message<JsonObject>>() {
+				public void handle(Message<JsonObject> msg) {
+					System.out.println("--playername come--");
+					System.out.println(msg.body().getString("playerName"));
+					client.playerName = msg.body().getString("playerName");
+				}
+			
+			});
+			
+			
+
 		}
 		
 		
@@ -322,6 +359,55 @@ public class GameServer {
 		section.drawEnd();
 	}
 	
+	/* ========================================== BUILD =============================================== */
+	public void clientMessageBuild(final Client client, JsonObject msg) {
+		System.out.println("->Build from client");
+		
+		final Plain plain = plains.get(msg.getString("plainId"));
+		if (plain == null) {
+			client.error("Invalid plainId.");
+			return;
+		}
+		final int tileX = msg.getInteger("x");
+		final int tileY = msg.getInteger("y");
+		
+		final String className = msg.getString("className");
+		final MapItemBuilding building = getMapItemBuilding(className);
+	
+		msg.putString("playerId",client.playerId);
+	
+		eventBus.send("build", msg, new Handler<Message<JsonObject>>() {
+			public void handle(Message<JsonObject> msg) {
+				System.out.println("->Build returned");
+				System.out.println(msg.toString());
+				
+				String error = msg.body().getString("error");
+				if (error != null) {
+					client.error(error);
+					return;
+				}
+				
+				building.setKey(msg.body().getString("key"));
+				try {
+					building.placeTo(plain, tileX, tileY);
+				} catch (Exception ex) {
+					client.error(ex.getMessage());
+					return;
+				
+				}
+				
+				// object on objectServer created... place it on map...
+				Map<String, Section> secs = new HashMap<String, Section>();
+				
+				
+				
+			}
+		
+		});
+				
+	}
+	
+	
 	
 	/* ======================================= MISC ============================================= */
 	
@@ -430,7 +516,7 @@ public class GameServer {
 		
 		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
 			public void handle(Message<JsonArray> message) {
-				System.out.println("Cassandra reply " + message.body());
+				//System.out.println("Cassandra reply " + message.body());
 				for (int i = 0; i < message.body().size(); i++) {
 					JsonObject jrow = message.body().get(i);
 					String plainId = jrow.getString("plainid");

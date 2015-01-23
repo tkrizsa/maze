@@ -37,9 +37,27 @@ Maze.Obj.Hero = function(maze) {
 	this.commandTileY = 0;
 	
 	this.bind('arrived', Maze.Obj.Hero.prototype.arrived);
+	this.bind('drawIt', Maze.Obj.Hero.prototype.heroDrawIt);
+	
+	this.playerName = "?";
+}
+
+Maze.Obj.Hero.prototype.heroDrawIt = function(cam, left, top) {
+	var fos = Math.max(Math.ceil(cam.TILE_HEIGHT / 4),11);
+	cam.ctx.font = "bold " + fos + "px Arial";
+	cam.ctx.fillStyle = 'rgba(25,25,25,1.0)';
+	cam.ctx.lineWidth = 1 + fos / 10;
+	cam.ctx.strokeStyle = 'rgba(250,250,200,1.0)';	
+	cam.ctx.strokeText( this.playerName, left, top - cam.TILE_HEIGHT);
+	cam.ctx.fillText( this.playerName, left, top - cam.TILE_HEIGHT);
+
+
 }
 
 Maze.Obj.Hero.prototype.click = function(mouse) {
+	//this.cancel();
+	this.maze.pop.heroCancel();
+	
 	switch (this.command) {
 		case false : 
 			this.aimNear = false;
@@ -50,13 +68,13 @@ Maze.Obj.Hero.prototype.click = function(mouse) {
 				this.walkTo(mouse.tileX, mouse.tileY);
 			}
 		break;
-		case "dig" : {
+		case "build_farm" : 
+		case "dig" : 
 			this.aimNear = true;
 			this.commandTileX = mouse.tileX;
 			this.commandTileY = mouse.tileY;
 			this.walkTo(mouse.tileX, mouse.tileY);
 		break;
-		}
 	}
 }
 
@@ -94,9 +112,6 @@ Maze.Obj.Hero.prototype.arrived = function() {
 			if (this.plain.isBlocking(this, this.commandTileX, this.commandTileY)) {
 				alert("cannot dig here!");
 			} else {
-				/*var gate = new Maze.Obj.Gate(this.maze, 'cave'+(Math.round(Math.random()*90000) + 10000), 2, 3);
-				gate.placeTo(this.plain, this.commandTileX, this.commandTileY);*/
-				
 				var msg = {
 					cmd : 'dig',
 					x : this.commandTileX,
@@ -108,9 +123,36 @@ Maze.Obj.Hero.prototype.arrived = function() {
 			this.cancel();
 
 		break;
+		case "build_farm" : 
+			var farm = new Maze.Obj.Farm(this.maze);
+			farm.placeTo(this.plain, this.commandTileX, this.commandTileY-1);
+			
+			var msg = {
+				cmd 		: 'build',
+				x 			: this.commandTileX,
+				y 			: this.commandTileY,
+				plainId 	: this.plain.plainId,
+				className 	: 'Farm'
+			}
+			var buildSection = this.plain.getSection(this.commandTileX, this.commandTileY);
+			buildSection.server.send(msg, function() {
+			
+			});
+			//buildSection.server.sock.send(JSON.stringify(msg));
+			
+			
+			
+			this.cancel();
+			
+			
+		break;
 	}
 
 }
+
+
+
+
 
 
 // ===================================== ORK ======================================

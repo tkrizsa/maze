@@ -128,16 +128,6 @@ Maze.Obj.Imaged.ImagedDrawIt = function(cam, left, top) {
 	var ww = this.sourceWidth / 48 * this.selfZoom;
 	var hh = ww / this.sourceWidth * this.sourceHeight;
 	
-	// cam.ctx.drawImage(cam.images[this.imageid], 
-		// this.sourceLeft, 
-		// this.sourceTop, 
-		// this.sourceWidth, 
-		// this.sourceHeight, 
-		// left  - cam.TILE_WIDTH * ((ww-1) / 2), 
-		// top - cam.TILE_HEIGHT * (hh-1), 
-		// cam.TILE_WIDTH * ww, 
-		// cam.TILE_HEIGHT * hh
-	// );
 	cam.ctx.drawImage(cam.images[this.imageid], 
 		this.sourceLeft, 
 		this.sourceTop, 

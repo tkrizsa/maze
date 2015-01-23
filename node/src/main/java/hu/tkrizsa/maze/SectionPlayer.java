@@ -6,6 +6,8 @@ public class SectionPlayer {
 	private int fromX;
 	private int fromY;
 	
+	
+	
 	public SectionPlayer(Client client) {
 		this.client = client;
 	}

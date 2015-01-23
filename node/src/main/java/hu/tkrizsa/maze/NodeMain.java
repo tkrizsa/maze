@@ -9,6 +9,7 @@ import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.platform.Verticle;
 
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.json.JsonArray;
 
  
  
@@ -27,8 +28,31 @@ public class NodeMain extends Verticle {
 			new AsyncResultHandler<String>() {
 				public void handle(AsyncResult<String> asyncResult) {
 					if (asyncResult.succeeded()) {
-						container.deployVerticle("hu.tkrizsa.maze.WebServer", appConfig.getObject("webserver"));
-						container.deployVerticle("hu.tkrizsa.maze.SocketServer", appConfig.getObject("gameserver"));
+						JsonArray cfg_webservers = appConfig.getArray("webservers");
+						if (cfg_webservers != null) {
+							for (int i = 0; i < cfg_webservers.size(); i++) {
+								container.deployVerticle("hu.tkrizsa.maze.WebServer", (JsonObject)cfg_webservers.get(i));
+							}
+						}
+						
+						JsonArray cfg_gameservers = appConfig.getArray("gameservers");
+						if (cfg_gameservers != null) {
+							for (int i = 0; i < cfg_gameservers.size(); i++) {
+								container.deployVerticle("hu.tkrizsa.maze.SocketServer", (JsonObject)cfg_gameservers.get(i));
+							}
+						}
+						
+						JsonArray cfg_playerservers = appConfig.getArray("playerservers");
+						if (cfg_playerservers != null) {
+							for (int i = 0; i < cfg_playerservers.size(); i++) {
+								System.out.println("deploy playerserver : ");
+								container.deployVerticle("hu.tkrizsa.maze.player.PlayerServer", (JsonObject)cfg_playerservers.get(i));
+							}
+						}
+						
+						
+						
+						
 						
 					} else {
 						asyncResult.cause().printStackTrace();

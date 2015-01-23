@@ -38,8 +38,8 @@ public class Section {
 			System.err.println("Invalid section key" + key);  
 		}  		
 	
-		System.out.println("Section created : " + key);
-		System.out.println("off : " + offX + ", " + offY);
+		// System.out.println("Section created : " + key);
+		// System.out.println("off : " + offX + ", " + offY);
 		this.game = game;
 		this.key = key;
 		this.plain = plain;
@@ -100,7 +100,7 @@ public class Section {
 	}
 	
 	public void subscribersNotify(boolean mapChanged) {
-		System.out.println("-> subscribersNotify");
+		// System.out.println("-> subscribersNotify");
 
 		JsonObject jresp = new JsonObject();
 		jresp.putString("cmd", "init");
@@ -108,8 +108,7 @@ public class Section {
 		jresp.putObject("sections", jresp_sections);
 		jresp_sections.putObject(getKey(), getJson(false, mapChanged));
 		for (Client client : subscribers.values()) {
-			System.out.println("-> client write");
-
+//			System.out.println("-> client write");
 			client.write(jresp);
 		}
 	
@@ -136,13 +135,13 @@ public class Section {
 		int secY = y - offY;
 		int pos = secY * game.SECTION_SIZE + secX;
 		
-		System.out.println("x : " + x);
-		System.out.println("y : " + y);
-		System.out.println("offX : " + offX);
-		System.out.println("offY : " + offY);
-		System.out.println("secX : " + secX);
-		System.out.println("secY : " + secY);
-		System.out.println("pos : " + pos);
+		// System.out.println("x : " + x);
+		// System.out.println("y : " + y);
+		// System.out.println("offX : " + offX);
+		// System.out.println("offY : " + offY);
+		// System.out.println("secX : " + secX);
+		// System.out.println("secY : " + secY);
+		// System.out.println("pos : " + pos);
 		
 		List<MapItem> ll = items.get(pos);
 		
@@ -282,6 +281,7 @@ public class Section {
 			for(SectionPlayer sectionPlayer : players.values()) {
 				JsonObject jplayer = new JsonObject();
 				jplayer.putString("id", sectionPlayer.getClient().getPlayerId());
+				jplayer.putString("name", sectionPlayer.getClient().playerName);
 				jplayer.putNumber("x", 	sectionPlayer.getClient().getPlayerX());
 				jplayer.putNumber("y", 	sectionPlayer.getClient().getPlayerY());
 				if (sectionPlayer.getFromKey() != null) {

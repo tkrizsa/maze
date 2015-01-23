@@ -19,6 +19,8 @@ public class Client {
 	protected int playerX;
 	protected int playerY;
 	
+	public String playerName = "!";
+	
 	public Client(GameServer game, SockJSSocket clientSocket) {
 		this.game = game;
 		this.clientSocket = clientSocket;

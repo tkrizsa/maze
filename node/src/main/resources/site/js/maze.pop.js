@@ -265,13 +265,11 @@ Maze.Pop.Main = function(maze) {
 	
 	
 	
-	
-	
-	
-	
+	this.cmdButtons = [];
 	
 	
 	this.cmdDigButton = new Maze.Pop.ButtonText(this, 'Dig');
+	this.cmdButtons.push(this.cmdDigButton);
 	this.cmdDigButton.left = 5;
 	this.cmdDigButton.bottom = 5;
 	this.cmdDigButton.width = 60;
@@ -279,9 +277,22 @@ Maze.Pop.Main = function(maze) {
 	this.cmdDigButton.color = '#e0e0e0';
 	this.cmdDigButton.onClick = function() {
 		maze.hero.command = 'dig';
-		thisPop.cmdDigButton.hidden = true;
-		thisPop.cmdCancelButton.hidden = false;
+		thisPop.heroCommand();
 	}
+	
+	this.cmdBuildButton = new Maze.Pop.ButtonText(this, 'Build');
+	this.cmdButtons.push(this.cmdBuildButton);
+	this.cmdBuildButton.left = 70;
+	this.cmdBuildButton.bottom = 5;
+	this.cmdBuildButton.width = 60;
+	this.cmdBuildButton.height = 60;
+	this.cmdBuildButton.color = '#e0e0e0';
+	this.cmdBuildButton.onClick = function() {
+		maze.hero.command = 'build_farm';
+		thisPop.heroCommand();
+	}
+	
+	
 	
 	this.cmdCancelButton = new Maze.Pop.ButtonText(this, 'Cancel');
 	this.cmdCancelButton.left = 5;
@@ -291,15 +302,23 @@ Maze.Pop.Main = function(maze) {
 	this.cmdCancelButton.color = '#e0e0e0';
 	this.cmdCancelButton.hidden = true;
 	this.cmdCancelButton.onClick = function() {
+		maze.hero.command = false;
 		thisPop.heroCancel();
 	}
 	
 	
+	this.heroCommand = function() {
+		for (var i in this.cmdButtons) {
+			this.cmdButtons[i].hidden = true;
+		}
+		this.cmdCancelButton.hidden = false;
+	}
 
 	this.heroCancel = function() {
-		maze.hero.command = false;
-		thisPop.cmdDigButton.hidden = false;
-		thisPop.cmdCancelButton.hidden = true;
+		for (var i in this.cmdButtons) {
+			this.cmdButtons[i].hidden = false;
+		}
+		this.cmdCancelButton.hidden = true;
 	}
 }
 

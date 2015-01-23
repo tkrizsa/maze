@@ -435,16 +435,24 @@ Maze.Camera.prototype.render = function() {
 				var top = canvasMidY + y * this.TILE_HEIGHT - this.centerOffsetY + oy;
 
 				if (item.obj.drawPhase > 0) {
-					if (!draw2[top+1100000]) { // +  for correct ordering (no minus, alphabetically right)
-						draw2[top+1100000] = new Array();
+					// multitile objects should be drawn once!
+					var drawNow = true;
+					if (item.obj.is('multitile') && (item.obj.tileX != x + this.centerTileX || item.obj.tileY != y + this.centerTileY)) {
+						drawNow = false;
 					}
-					draw2[top+1100000].push({
-						obj : item.obj,
-						left : left,
-						top : top,
-						tileX : x + this.centerTileX, 
-						tileY : y + this.centerTileY 
-					});
+
+					if (drawNow) {
+						if (!draw2[top+1100000]) { // +  for correct ordering (no minus, alphabetically right)
+							draw2[top+1100000] = new Array();
+						}
+						draw2[top+1100000].push({
+							obj : item.obj,
+							left : left,
+							top : top,
+							tileX : x + this.centerTileX, 
+							tileY : y + this.centerTileY 
+						});
+					}
 				} else {
 					item.obj.trigger('drawIt', this, left, top);
 					

@@ -2,10 +2,14 @@
 
 Maze.prototype.sectionGetServerUrl = function(section) {
 	if (section.offX >= 0)
-		return 'http://localhost:8091/testapp';
+		return 'http://localhost:8091/mazemaps';
 	else
-		return 'http://localhost:8093/testapp';
+		return 'http://localhost:8093/mazemaps';
 }
+
+// Maze.prototype.playerGetServerUrl = function(objectId) {
+	// return 'http://localhost:8092/mazeplayers';
+// }
 
 Maze.prototype.serverSubscribe = function(section) {
 	var url = this.sectionGetServerUrl(section);
@@ -163,6 +167,15 @@ Maze.Server = function(maze, url) {
 	};	
 }
 
+Maze.Server.prototype.send = function(omsg) {
+	var msg = JSON.stringify(omsg);
+	console.log("SENT TO SERVER");
+	console.log(msg);
+	
+	this.sock.send(msg);
+
+}
+
 Maze.Server.prototype.processResponse = function(data) {
 	console.log("SERVER RESPONSE : ");
 	console.log(data);
@@ -177,6 +190,9 @@ Maze.Server.prototype.processResponse = function(data) {
 		return;
 		
 	}
+	
+	if (data.cmd != "init")
+		return;
 	
 	for (var rsection_key in data.sections) {
 		var section = this.maze.subscribedSections[rsection_key];
@@ -200,10 +216,13 @@ Maze.Server.prototype.processResponse = function(data) {
 		if (rsection.players) {
 			for (var i in rsection.players) {
 				var rplayer = rsection.players[i];
+				
+				var player = this.maze.objByPlayerId(rplayer.id);
+				if (rplayer.name) player.playerName = rplayer.name;
+				
 				if (rplayer.id == this.maze.hero.playerId) {
 					continue;
 				}
-				var player = this.maze.objByPlayerId(rplayer.id);
 				if (player) {
 					player.walkTo(rplayer.x, rplayer.y);
 					player.away = false;
@@ -355,9 +374,7 @@ Maze.Server.prototype.stepIt = function() {
 	}
 	
 		
-	console.log("SENT TO SERVER");
-	console.log(msg);
-	this.sock.send(JSON.stringify(msg));
+	this.send(msg);
 
 	this.playerStatusSent = true;
 	this.sectionStatusSent = true;
@@ -416,7 +433,15 @@ Maze.Plain.prototype.addObject = function(obj, tileX, tileY) {
 			obj.remove();
 		}
 	}
+}
 
+//for buildings and multi tile items normal addObject not good, it takes coordinates from object's tileX and tileY
+//but if object lays on multiple tiles, it's not the proper way
+Maze.Plain.prototype.addObjectMulti = function(obj, tileX, tileY) {
+	var section = this.getSection(tileX, tileY);
+	if (section != null) {
+		section.addObject(obj, tileX, tileY);
+	} 
 }
 
 Maze.Plain.prototype.addFloor = function(obj, tileX, tileY) {
