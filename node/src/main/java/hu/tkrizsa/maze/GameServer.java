@@ -368,8 +368,6 @@ public class GameServer {
 			client.error("Invalid plainId.");
 			return;
 		}
-		final int tileX = msg.getInteger("x");
-		final int tileY = msg.getInteger("y");
 		
 		final String className = msg.getString("className");
 		final MapItemBuilding building = getMapItemBuilding(className);
@@ -389,7 +387,7 @@ public class GameServer {
 				
 				building.setKey(msg.body().getString("key"));
 				try {
-					building.placeTo(plain, tileX, tileY);
+					building.placeTo(msg.body());
 				} catch (Exception ex) {
 					client.error(ex.getMessage());
 					return;
@@ -415,6 +413,10 @@ public class GameServer {
 		int secX = x>=0 ? x / SECTION_SIZE : ~(~x / SECTION_SIZE);
 		int secY = y>=0 ? y / SECTION_SIZE : ~(~y / SECTION_SIZE);
 		return plainId + "#" + secX + "#" + secY;
+	}
+	
+	public Section sectionGetExisting(String key) {
+		return sections.get(key);
 	}
 	
 	public Section sectionGet(String key) {

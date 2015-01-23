@@ -14,6 +14,7 @@ public class GameObject {
 	
 	
 	
+	
 	public GameObject(PlayerServer server) {
 		this.server = server;
 		this.key = server.generateKey();

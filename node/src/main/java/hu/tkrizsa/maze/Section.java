@@ -184,7 +184,7 @@ public class Section {
 		for (int y = 0; y < GameServer.SECTION_SIZE; y++) {
 			for (int x = 0; x < GameServer.SECTION_SIZE; x++) {
 				List<MapItem> ll = new LinkedList<MapItem>();
-				if (y+offY>=plain.getTop() && y+offY <=plain.getBottom() && x+offX>= plain.getLeft() && x+offX<= plain.getRight()) {
+				if (y+offY>=plain.getTop() && y+offY <= plain.getBottom() && x+offX>= plain.getLeft() && x+offX<= plain.getRight()) {
 					ll.add(FLOOR);
 				} else {
 					ll.add(NOTHING);

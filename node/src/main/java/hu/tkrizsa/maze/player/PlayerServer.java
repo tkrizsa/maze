@@ -36,9 +36,13 @@ public class PlayerServer extends Verticle {
 	}
 	
 	public GameObject createObjectByClassName(String className) {
-		if ("Farm".equals(className)) return new Farm(this);
+		//if ("Farm".equals(className)) return new Farm(this);
 		return null;
+	}
 	
+	public GameObjectBuilding createBuildingByClassName(String className, String plainId, int tileX, int tileY) {
+		if ("Farm".equals(className)) return new Farm(this, plainId, tileX, tileY);
+		return null;
 	}
 	
 	public String generateKey() {
@@ -80,14 +84,28 @@ public class PlayerServer extends Verticle {
 			public void handle(Message<JsonObject> msg) {
 				logger.info("BUILD");
 				
-				String className = msg.body().getString("className");
-				GameObject newObject = createObjectByClassName(className);
+				String playerId 	= msg.body().getString("playerId");
+				String className 	= msg.body().getString("className");
+				String plainId 		= msg.body().getString("plainId");
+				Integer tileX		= msg.body().getInteger("tileX");
+				Integer tileY		= msg.body().getInteger("tileY");
 				
-				String playerId = msg.body().getString("playerId");
 				if (playerId == null || "".equals(playerId)) {
 					replyError(msg, "Missing player id in build.");
+					return;
 				}
-			
+				if (plainId == null || "".equals(plainId)) {
+					replyError(msg, "Missing plain id in build.");
+					return;
+				}
+				if (tileX == null || tileY == null) {
+					replyError(msg, "Missing tile coordinates in build.");
+					return;
+				}
+				
+				
+				GameObject newObject = createBuildingByClassName(className, plainId, tileX, tileY);
+				
 				if (newObject == null) {
 					replyError(msg, "Invalid classname.");
 					return;

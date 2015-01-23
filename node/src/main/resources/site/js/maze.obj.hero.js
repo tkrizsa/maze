@@ -129,8 +129,8 @@ Maze.Obj.Hero.prototype.arrived = function() {
 			
 			var msg = {
 				cmd 		: 'build',
-				x 			: this.commandTileX,
-				y 			: this.commandTileY,
+				tileX 		: this.commandTileX,
+				tileY		: this.commandTileY,
 				plainId 	: this.plain.plainId,
 				className 	: 'Farm'
 			}
