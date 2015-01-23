@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 public class GameObject {
 
+	private String className;
 	private PlayerServer server;
 	private String key;
 	private List<Owner> owners = new ArrayList<Owner>();
@@ -15,7 +16,8 @@ public class GameObject {
 	
 	
 	
-	public GameObject(PlayerServer server) {
+	public GameObject(String className, PlayerServer server) {
+		this.className = className;
 		this.server = server;
 		this.key = server.generateKey();
 	}
@@ -24,14 +26,27 @@ public class GameObject {
 		return key;
 	}
 	
+	public void setKey(String key) {
+		this.key = key;
+	}
+	
+	public String getClassName() {
+		return className;
+	}
+	
 	public void addOwner(String playerId, float percent) {
 		owners.add(new Owner(playerId, percent));
 	}
 	
 	public JsonObject getData() {
 		JsonObject jdata = new JsonObject();
-		jdata.putString("key", getKey());
+		jdata.putString("objectKey", getKey());
 		return jdata;
+	}
+	
+	public void setData(JsonObject jdata) {
+		System.out.println("itt es beallitom a key-t : " + jdata.getString("objectKey"));
+		setKey(jdata.getString("objectKey"));
 	}
 	
 	/* ================================= Owner class ================================= */

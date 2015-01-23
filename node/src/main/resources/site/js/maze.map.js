@@ -205,6 +205,28 @@ Maze.Server.prototype.processResponse = function(data) {
 		var rsection = data.sections[rsection_key];
 		
 		
+		// If server sent uniq objects
+		if (rsection.uniqitems) {
+			var jitems = rsection.uniqitems;
+			for (var i in jitems) {
+				var jitem = jitems[i];
+				var objectKey = jitem.objectKey;
+				if (!this.maze.objs[objectKey]) {
+					var className = jitem.className;
+					var obj = new Maze.Obj[className]();
+					this.maze.objs[objectKey] = obj;
+					obj.plain = section.plain;
+					obj.tileX = jitem.tileX;
+					obj.tileY = jitem.tileY;
+					obj.objectKey = jitem.objectKey;
+			
+				}
+			}
+		
+		
+		}
+		
+		
 		// If server sent back the item map of section, load it
 		if (rsection.objects && rsection.items) {
 			section.deSerialize(rsection);
@@ -674,17 +696,37 @@ Maze.Section.prototype.deSerialize = function(result) {
 				var obj;
 				if (typeof items[i] == 'number') {
 					className = result.objects[items[i]];
-					obj = this.plain.maze[className.toUpperCase()];
-					if (!obj.isBlocking) { // if array..
-						obj = obj[0];
+					if (className.indexOf("#")<0) {
+						obj = this.plain.maze[className.toUpperCase()];
+						if (obj == null) {
+							alert("invalid classname : " + (className?className:"NULL"));
+							continue;
+						}
+						if (obj.constructor === Array) { // if array..
+							obj = obj[0];
+						}
+					} else {
+						var objar = className.split("#");
+						var className = objar[0];
+						var objectKey = objar[1];
+						obj = this.plain.maze.objs[objectKey];
+						if (!obj) {
+							console.log("Object missing : " + result.objects[items[i]]);
+							continue;
+							// obj = new Maze.Obj[className]();
+							// obj.objectKey = objectKey;
+							// this.plain.maze.objs[objectKey] = obj;
+						}
 					}
 				} else {
-					className = result.objects[items[i]._ix];
-					obj = new Maze.Obj[className]();
-					obj.plain = this;
-					obj.tileX = this.offX + x;
-					obj.tileY = this.offY + y;
-					obj.setMapData(items[i]);
+					alert("Invalid item : " + items[i]);
+					continue;
+					// className = result.objects[items[i]._ix];
+					// obj = new Maze.Obj[className]();
+					// obj.plain = this;
+					// obj.tileX = this.offX + x;
+					// obj.tileY = this.offY + y;
+					// obj.setMapData(items[i]);
 				}
 				
 				

@@ -26,6 +26,7 @@ public class Section {
 	private List<List<MapItem>> items;
 	private Map<String, SectionPlayer> players = new HashMap<String, SectionPlayer>();
 	private Map<String, PlayerPos> awayPlayers = new HashMap<String, PlayerPos>();
+	private Map<String, MapItemUniq> uniqItems = new HashMap<String, MapItemUniq>();
 	
 
 	public Section(GameServer game, Plain plain, String key) {
@@ -165,6 +166,10 @@ public class Section {
 		save();
 	}
 	
+	public void addUniq(MapItemUniq uobj) {
+		uniqItems.put(uobj.getKey(), uobj);
+	}
+	
 	/* ===================================== LOAD / SAVE ======================================== */
 	public void load() {
 		game.loadSection(this);
@@ -200,6 +205,7 @@ public class Section {
 	// called back when loaded from cassandra
 	protected void loaded(JsonObject jdata) {
 		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
+		uniqItems = new HashMap<String, MapItemUniq>();
 		
 		
 		
@@ -216,7 +222,7 @@ public class Section {
 			JsonArray jlist = (JsonArray)jitems.get(i);
 			for (int j = 0; j < jlist.size(); j++) {
 				Object omidata = jlist.get(j);
-				int classIndex = -1;
+				/*int classIndex = -1;
 				JsonObject jmidata = null;
 				if (omidata instanceof JsonObject) {
 					jmidata = (JsonObject)omidata;
@@ -224,12 +230,26 @@ public class Section {
 					
 				} else {
 					classIndex = (int)omidata;
-				}
-				
+				}*/
+				int classIndex = (int)omidata;
 				String className = classNames.get(classIndex);
-				MapItem obj = game.getMapItem(className);
-				if (jmidata != null) {
-					obj.setMapData(jmidata);
+				MapItem obj = null;
+				if (className.indexOf('#') == -1) {
+					obj = game.getMapItem(className);
+					// if (jmidata != null) {
+						// obj.setMapData(jmidata);
+					// }
+					
+				} else {
+					String[] xd = className.split("#");
+					className = xd[0];
+					String objectKey = xd[1];
+					obj = uniqItems.get(objectKey);
+					if (obj == null) {
+						obj = game.getMapItem(className);
+						((MapItemUniq)obj).setKey(objectKey);
+						uniqItems.put(objectKey, (MapItemUniq)obj);
+					}
 				}
 				ll.add(obj);
 			}
@@ -237,7 +257,41 @@ public class Section {
 			
 		}
 		
-		setLoaded(true);
+		if (uniqItems.size() == 0) {
+			setLoaded(true);
+		} else {
+			JsonArray jquery = new JsonArray();
+			for (String objectKey : uniqItems.keySet()) {
+				jquery.addString(objectKey);
+			}
+			game.queryObjects(jquery);
+		}
+	}
+	
+	public void processObjectData(JsonArray jobjects) {
+		for (int i = 0; i < jobjects.size(); i++) {
+			JsonObject jdata = jobjects.get(i);
+			String objectKey = jdata.getString("objectKey");
+			MapItemUniq uobj = uniqItems.get(objectKey);
+			if (uobj != null) {
+				uobj.setData(jdata);
+				uobj.setLoaded(true);
+			}
+		}
+		
+		if (!isLoaded()) {
+			boolean xloaded = true;
+			for (MapItemUniq uobj : uniqItems.values()) {
+				if (!uobj.isLoaded()) {
+					xloaded = false;
+					break;
+				}
+			}
+			if (xloaded) {
+				setLoaded(true);
+			}
+		
+		}
 	}
 	
 	
@@ -254,12 +308,17 @@ public class Section {
 			for (List<MapItem> ll : items) {
 				JsonArray jmapitem = new JsonArray();
 				for (MapItem mi : ll) {
-					Integer index = objects.get(mi.getClassName());
+					String objectId = mi.getClassName();
+					if (mi instanceof MapItemUniq)
+						objectId += "#" + ((MapItemUniq)mi).getKey();
+					Integer index = objects.get(objectId);
 					if (index == null) {
-						jobjects.addString(mi.getClassName());
-						objects.put(mi.getClassName(), jobjects.size()-1);
+						jobjects.addString(objectId);
+						objects.put(objectId, jobjects.size()-1);
 						index = jobjects.size()-1;
 					}
+					jmapitem.addNumber(index);
+					/*
 					JsonObject jmidata = mi.getMapData();
 					if (jmidata == null) {
 						jmapitem.addNumber(index);
@@ -267,6 +326,7 @@ public class Section {
 						jmidata.putNumber("_ix", index);
 						jmapitem.addObject(jmidata);
 					}
+					*/
 				}
 				jitems.addArray(jmapitem);
 			}
@@ -309,6 +369,13 @@ public class Section {
 				jaway.addObject(jaw);
 			}
 			jres.putArray("away", jaway);
+			
+			JsonArray juniqitems = new JsonArray();
+			for (MapItemUniq item : uniqItems.values()) {
+				juniqitems.addObject(item.getMapData());
+			}
+			jres.putArray("uniqitems", juniqitems);
+			
 		}
 		
 		

@@ -36,7 +36,7 @@ public class PlayerServer extends Verticle {
 	}
 	
 	public GameObject createObjectByClassName(String className) {
-		//if ("Farm".equals(className)) return new Farm(this);
+		if ("Farm".equals(className)) return new Farm(this);
 		return null;
 	}
 	
@@ -64,8 +64,33 @@ public class PlayerServer extends Verticle {
 		System.out.println(appConfig.toString());
 		
 		logger.info("player server started ....");
+		loadObjects();
 		
 		
+		eventBus.registerHandler("queryobjects", new Handler<Message<JsonArray>>() {
+			@Override
+			public void handle(Message<JsonArray> msg) {
+				logger.info("QUERYOBJECTS");
+				logger.info(msg.body().toString());
+				JsonArray jresp = new JsonArray();
+				JsonArray jkeys = msg.body();
+				for (int i = 0; i < jkeys.size(); i++) {
+					String key = (String)jkeys.get(i);
+					GameObject obj = objects.get(key);
+					if (obj != null) {
+						System.out.println("* found : " + key);
+						jresp.add(obj.getData());
+					
+					} else {
+						System.out.println("* not found : " + key);
+					}
+				
+				}
+			
+				eventBus.publish("objectdata", jresp);
+			}
+		});
+
 		eventBus.registerHandler("getplayer", new Handler<Message<JsonObject>>() {
 			@Override
 			public void handle(Message<JsonObject> msg) {
@@ -73,10 +98,7 @@ public class PlayerServer extends Verticle {
 				Player player = getPlayer(msg.body().getString("playerId"));
 			
 				msg.reply(player.getData());
-			
 			}
-		
-		
 		});
 
 		eventBus.registerHandler("build", new Handler<Message<JsonObject>>() {
@@ -114,11 +136,81 @@ public class PlayerServer extends Verticle {
 				newObject.addOwner(playerId, 100.0f);
 				objects.put(newObject.getKey(), newObject);
 				
+				System.out.println("------> i respnose to build:");
+				System.out.println(newObject.getData().toString());
+				System.out.println("<------");
+				
 				msg.reply(newObject.getData());
+				saveObject(newObject);
 			}
 		
 		
 		});
+		
 
 	}
+	
+	/* =========================================== cassandra ================================================ */
+	public void saveObject(GameObject obj) {
+		final EventBus eventBus = vertx.eventBus();
+		
+		JsonObject req = new JsonObject();
+		req.putString("action", "prepared");
+		req.putString("statement", "INSERT INTO maze.objects (objectKey, className, objectData) VALUES (?, ?, ?)");
+		JsonArray v0 = new JsonArray();
+		v0.addString(obj.getKey());
+		v0.addString(obj.getClassName());
+		v0.addString(obj.getData().toString());
+		JsonArray values = new JsonArray();
+		values.addArray(v0);
+		req.putArray("values", values);
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
+			public void handle(Message<JsonObject> message) {	
+				System.out.println("Cassandra reply to object save :  " + message.body());
+			}
+		});
+	}
+	
+	public void loadObjects() {
+		final EventBus eventBus = vertx.eventBus();
+		
+		JsonObject req = new JsonObject();
+		req.putString("action", "raw");
+		req.putString("statement", "SELECT * FROM maze.objects");
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
+			public void handle(Message<JsonArray> message) {
+				System.out.println("Cassandra reply loadObjects() " + message.body());
+				
+				if (!(message.body() instanceof JsonArray))
+					return;
+				
+				for (int i = 0; i < message.body().size(); i++) {
+					JsonObject jrow = message.body().get(i);
+					
+					String objectKey = jrow.getString("objectkey");
+					String className = jrow.getString("classname");
+					JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
+					
+					GameObject obj = createObjectByClassName(className);
+					if (obj == null) {
+						System.err.println("Class not found (loaded from db) : '" + (className==null?"NULL":className) + "'");
+					}
+					obj.setData(jdata);
+					objects.put(obj.getKey(), obj);
+					
+					System.out.println("------------loaded object---------------");
+					System.out.println(objectKey);
+					System.out.println(obj.getKey());
+					System.out.println(obj.getData().toString());
+					System.out.println("------------");
+					
+				} 
+			}
+		});
+	}
+	
 }

@@ -1,9 +1,9 @@
 package hu.tkrizsa.maze.mapitem;
 
 import org.vertx.java.core.json.JsonObject;
+import hu.tkrizsa.maze.GameServer;
 
-
-public class MapItemGate extends MapItem {
+public class MapItemGate extends MapItemUniq {
 	
 	public String targetPlainId;
 	public int targetX;
@@ -11,12 +11,12 @@ public class MapItemGate extends MapItem {
 	
 	
 	
-	public MapItemGate() {
-		super("Gate");
+	public MapItemGate(GameServer server) {
+		super("Gate", server);
 	}
 	
-	public MapItemGate(String targetPlainId, int targetX, int targetY) {
-		this();
+	public MapItemGate(GameServer server, String targetPlainId, int targetX, int targetY) {
+		this(server);
 		this.targetPlainId = targetPlainId;
 		this.targetX = targetX;
 		this.targetY = targetY;

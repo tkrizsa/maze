@@ -7,6 +7,10 @@ CREATE TABLE plains (plainid text primary key, info map<text,text>);
 INSERT INTO plains (plainId, info) VALUES ('earth', {'left' : '-2000', 'right' : '2000', 'top' : '-2000', 'bottom':'2000', 'defaultFloor' : 'GrassFloor'});
 
 
+CREATE TABLE objects (objectKey text primary key, className text, objectData text);
+
+
+
 CREATE TABLE login (loginid text primary key, email text, password text);
 
 CREATE INDEX login_email_ix ON login (email);

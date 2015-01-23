@@ -8,6 +8,14 @@ import hu.tkrizsa.maze.util.SectionMap;
 public class MapItemBuilding extends MapItemUniq {
 
 
+	private String plainId;
+	private int tileX;
+	private int tileY;
+	private int tileWidth;
+	private int tileHeight;
+	private int tileOffY;
+	private int tileOffX;
+
 	public MapItemBuilding(String className, GameServer server) {
 		super(className, server);
 	}
@@ -16,13 +24,7 @@ public class MapItemBuilding extends MapItemUniq {
 	
 	public void placeTo(JsonObject jdata) throws Exception {
 		System.out.println(jdata.toString());
-		String plainId = jdata.getString("plainId");
-		int tileX 			= jdata.getInteger("tileX");
-		int tileY 			= jdata.getInteger("tileY");
-		int tileWidth 		= jdata.getInteger("tileWidth");
-		int tileHeight 		= jdata.getInteger("tileHeight");
-		int tileOffY 		= jdata.getInteger("tileOffX");
-		int tileOffX 		= jdata.getInteger("tileOffY");
+		setData(jdata);
 		
 		SectionMap secs = new SectionMap();
 		
@@ -52,6 +54,7 @@ public class MapItemBuilding extends MapItemUniq {
 		}
 			
 		for (Section section : secs.values()) {
+			section.addUniq(this);
 			section.drawEnd();
 		}
 		
@@ -60,17 +63,33 @@ public class MapItemBuilding extends MapItemUniq {
 	
 	
 	public JsonObject getMapData() {
-		JsonObject data = new JsonObject();
-		// data.putString("plainId", this.targetPlainId);
-		// data.putNumber("x", this.targetX);
-		// data.putNumber("y", this.targetY);
-		return data;
+		JsonObject jdata = super.getMapData();
+		jdata.putString("plainId"	, plainId);
+		jdata.putNumber("tileX"		, tileX);
+		jdata.putNumber("tileY"		, tileY);
+		jdata.putNumber("tileWidth"	, tileWidth);
+		jdata.putNumber("tileHeight", tileHeight);
+		jdata.putNumber("tileOffX"	, tileOffX);
+		jdata.putNumber("tileOffY"	, tileOffY);
+		return jdata;
 	}
 	
 	public void setMapData(JsonObject data) {
 		// this.targetPlainId = data.getString("plainId");
 		// this.targetX = data.getInteger("x");
 		// this.targetY = data.getInteger("y");
+	}
+	
+	@Override
+	public void setData(JsonObject jdata) {
+		super.setData(jdata);
+		plainId 		= jdata.getString("plainId");
+		tileX 			= jdata.getInteger("tileX");
+		tileY 			= jdata.getInteger("tileY");
+		tileWidth 		= jdata.getInteger("tileWidth");
+		tileHeight 		= jdata.getInteger("tileHeight");
+		tileOffY 		= jdata.getInteger("tileOffX");
+		tileOffX 		= jdata.getInteger("tileOffY");
 	}
 
 

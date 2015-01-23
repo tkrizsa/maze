@@ -124,8 +124,8 @@ Maze.Obj.Hero.prototype.arrived = function() {
 
 		break;
 		case "build_farm" : 
-			var farm = new Maze.Obj.Farm(this.maze);
-			farm.placeTo(this.plain, this.commandTileX, this.commandTileY-1);
+			//var farm = new Maze.Obj.Farm(this.maze);
+			//farm.placeTo(this.plain, this.commandTileX, this.commandTileY-1);
 			
 			var msg = {
 				cmd 		: 'build',

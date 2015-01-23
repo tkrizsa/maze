@@ -14,13 +14,13 @@ public class MapItem {
 		return className;
 	}
 	
-	public JsonObject getMapData() {
+	// public JsonObject getMapData() {
 		// update it in uniq objects
-		return null;
-	}
+		// return null;
+	// }
 	
-	public void setMapData(JsonObject data) {
+	// public void setMapData(JsonObject data) {
 		// update it in uniq objects
-	}
+	// }
 	
 }

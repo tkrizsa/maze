@@ -17,8 +17,12 @@ public class GameObjectBuilding extends GameObject {
 	private int tileOffY;
 	
 	
-	public GameObjectBuilding(PlayerServer server, String plainId, int tileX, int tileY, int tileWidth, int tileHeight, int tileOffX, int tileOffY) {
-		super(server);
+	public GameObjectBuilding(String className, PlayerServer server) {
+		super(className, server);
+	}
+	
+	public GameObjectBuilding(String className, PlayerServer server, String plainId, int tileX, int tileY, int tileWidth, int tileHeight, int tileOffX, int tileOffY) {
+		super(className, server);
 		
 		this.plainId 		= plainId;
 		this.tileX 			= tileX;
@@ -40,6 +44,19 @@ public class GameObjectBuilding extends GameObject {
 		jdata.putNumber("tileOffX"		, tileOffX);
 		jdata.putNumber("tileOffY"		, tileOffY);
 		return jdata;
+	}
+	
+	@Override 
+	public void setData(JsonObject jdata) {
+		super.setData(jdata);
+		plainId 		= jdata.getString("plainId");
+		tileX 			= jdata.getInteger("tileX");
+		tileY 			= jdata.getInteger("tileY");
+		tileWidth 		= jdata.getInteger("tileWidth");
+		tileHeight 		= jdata.getInteger("tileHeight");
+		tileOffX 		= jdata.getInteger("tileOffX");
+		tileOffY 		= jdata.getInteger("tileOffY");
+	
 	}
 	
 

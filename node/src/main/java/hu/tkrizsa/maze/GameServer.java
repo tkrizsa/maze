@@ -77,6 +77,19 @@ public class GameServer {
 		this.eventBus = eventBus;
 		
 		this.loadPlains();
+		this.eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
+			@Override
+			public void handle(Message<JsonArray> msg) {
+				System.out.println("OBJECTDATA");
+				System.out.println(msg.body());
+				JsonArray jobjects = msg.body();
+				
+				for (Section section : sections.values()) {
+					section.processObjectData(jobjects);
+				}
+				
+			}
+		});
 	}
 	
 	public MapItem getSingle(String className) {
@@ -84,7 +97,7 @@ public class GameServer {
 	}
 	
 	public MapItem getMapItem(String className) {
-				if ("Gate".equals(className)) {return new MapItemGate();} 
+				if ("Gate".equals(className)) {return new MapItemGate(this);} 
 		else	if ("Farm".equals(className)) {return new MapItemFarm(this);} 
 		else {
 			return getSingle(className);
@@ -349,12 +362,12 @@ public class GameServer {
 		sections.put(caveSectionKey, caveSection);
 		caveSection.notExists();
 
-		MapItem caveGate	= new MapItemGate(plainId, x, y);
+		MapItem caveGate	= new MapItemGate(this, plainId, x, y);
 		caveSection.draw(4, 3, caveGate);
 		caveSection.drawEnd();
 		
 		
-		MapItem gate		= new MapItemGate(cavePlainId, 4, 3);
+		MapItem gate		= new MapItemGate(this, cavePlainId, 4, 3);
 		section.draw(x, y, gate);
 		section.drawEnd();
 	}
@@ -385,7 +398,7 @@ public class GameServer {
 					return;
 				}
 				
-				building.setKey(msg.body().getString("key"));
+				//building.setKey(msg.body().getString("objectKey")); /// placeTo do this..
 				try {
 					building.placeTo(msg.body());
 				} catch (Exception ex) {
@@ -393,11 +406,7 @@ public class GameServer {
 					return;
 				
 				}
-				
-				// object on objectServer created... place it on map...
-				Map<String, Section> secs = new HashMap<String, Section>();
-				
-				
+
 				
 			}
 		
@@ -441,6 +450,10 @@ public class GameServer {
 	public String getPlainIdOfKey(String key) {
 		String[] keyparts = key.split("#");
 		return keyparts[0];
+	}
+	
+	public void queryObjects(JsonArray objects) {
+		eventBus.publish("queryobjects", objects);
 	}
 	
 	
