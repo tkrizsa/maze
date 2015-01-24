@@ -7,18 +7,21 @@
 		"port": 8090
 	}],
 
-	"gameservers" : [{
-		"host": "0.0.0.0",
-		"port": 8091
+	"mapservers" : [{
+		"serverId"	: "map00"
 	},
-{
-		"host": "0.0.0.0",
-		"port": 8093
+	{
+		"serverId"	: "map01"
 	}],
 	
-	"playerservers" : [{
-		"host": "0.0.0.0",
-		"port": 8092
+	"objectservers" : [{
+		"serverId"	: "obj00"
+	}],
+	
+	"clientservers" : [{
+		"serverId"	: "cli00",
+		"host"		: "0.0.0.0",
+		"port"		: 8091
 	}],
 	
 	"cassandra" : {

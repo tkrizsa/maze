@@ -1,6 +1,6 @@
-package hu.tkrizsa.maze.util;
+package hu.tkrizsa.maze.mapserver;
 
-import hu.tkrizsa.maze.Section;
+import hu.tkrizsa.maze.util.SmallMap;
 
 public class SectionMap extends SmallMap<String, Section> {
 	public Section put(Section section) {

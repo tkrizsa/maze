@@ -1,11 +1,14 @@
-package hu.tkrizsa.maze;
+package hu.tkrizsa.maze.mapserver;
 
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
+import org.vertx.java.platform.Verticle;
+
 
 import java.util.Map;
 import java.util.HashMap;
@@ -13,8 +16,80 @@ import java.util.Random;
 
 import hu.tkrizsa.maze.mapitem.*;
 
-public class GameServer {
+public class MapServer extends Verticle {
+
 	private EventBus eventBus;
+	final Map<String, Plain> plains = new HashMap<String, Plain>();
+	final Map<String, Client> clients = new HashMap<String, Client>();
+	final Map<String, Section> sections = new HashMap<String, Section>();
+	
+	// holds player who's disconnected and away from a section
+	// only purpose to remove from section's away list if comes fast back here
+	final Map<String, String> awayPlayers = new HashMap<String, String>(); // playerId -> sectionKey
+	
+	public final static int SECTION_SIZE = 16;
+	
+	private String serverId;
+
+
+	@Override
+	public void start() {
+		
+		final MapServer thisServer = this;
+		
+		final Logger logger = container.logger();
+		this.eventBus = vertx.eventBus();
+		final JsonObject appConfig = container.config();
+		System.out.println("MapServer starting...");
+		System.out.println(appConfig);
+
+		serverId = appConfig.getString("serverId");
+
+		
+		loadPlains();
+		
+		
+		eventBus.registerHandler("traverse#" + serverId, new Handler<Message<JsonObject>>() {
+			@Override
+			public void handle(Message<JsonObject> msg) {
+				System.out.println("TRAVERSE#"+serverId);
+				System.out.println(msg.body());
+		
+				String playerId = msg.body().getString("playerId");
+				Client client = clients.get(playerId);
+				if (client == null) {
+					String clientServerAddress = msg.body().getString("clientServerAddress");
+					client = new Client(thisServer, clientServerAddress, playerId);
+					clients.put(client.getPlayerId(), client);
+				}
+				thisServer.clientMessage(client, msg.body());
+			}
+		
+		
+		
+		});
+		
+		eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
+			@Override
+			public void handle(Message<JsonArray> msg) {
+				System.out.println("OBJECTDATA");
+				System.out.println(msg.body());
+				JsonArray jobjects = msg.body();
+				
+				for (Section section : sections.values()) {
+					section.processObjectData(jobjects);
+				}
+				
+			}
+		});
+
+	}
+	
+	public void busSend(String address, JsonObject jdata) {
+		this.eventBus.send(address, jdata);
+	}
+
+
 
 	private final Map<String, MapItem> mapItemSingletones = new HashMap<String, MapItem>();
 	{
@@ -63,34 +138,7 @@ public class GameServer {
 	}
 
 	
-	final Map<String, Plain> plains = new HashMap<String, Plain>();
-	final Map<String, Client> clients = new HashMap<String, Client>();
-	final Map<String, Section> sections = new HashMap<String, Section>();
-	
-	// holds player who's disconnected and away from a section
-	// only purpose to remove from section's away list if comes fast back here
-	final Map<String, String> awayPlayers = new HashMap<String, String>(); // playerId -> sectionKey
-	
-	public final static int SECTION_SIZE = 16;
 
-	public GameServer(EventBus eventBus) {
-		this.eventBus = eventBus;
-		
-		this.loadPlains();
-		this.eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
-			@Override
-			public void handle(Message<JsonArray> msg) {
-				System.out.println("OBJECTDATA");
-				System.out.println(msg.body());
-				JsonArray jobjects = msg.body();
-				
-				for (Section section : sections.values()) {
-					section.processObjectData(jobjects);
-				}
-				
-			}
-		});
-	}
 	
 	public MapItem getSingle(String className) {
 		return mapItemSingletones.get(className);
@@ -144,12 +192,7 @@ public class GameServer {
 
 	
 		// Handle playerId. required!
-		JsonObject jplayer = msg.getObject("player");
-		if (jplayer == null) {
-			client.error("player is null");
-			return;
-		}
-		String playerId = jplayer.getString("id");
+		String playerId = msg.getString("playerId");
 		if (playerId == null || "".equals("playerId")) {
 			client.error("no player id.");
 			return;

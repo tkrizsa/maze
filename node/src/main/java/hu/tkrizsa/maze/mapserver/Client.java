@@ -1,6 +1,5 @@
-package hu.tkrizsa.maze;
+package hu.tkrizsa.maze.mapserver;
 
-import org.vertx.java.core.sockjs.SockJSSocket;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.buffer.Buffer;
 
@@ -10,9 +9,9 @@ import java.util.Iterator;
 
 public class Client {
 
-	protected SockJSSocket clientSocket;
-	protected GameServer game;
+	protected MapServer game;
 	protected String playerId;
+	private String clientServerAddress;
 
 	protected Map<String, Section> sections = new HashMap<String, Section>();
 	protected Section playerSection;
@@ -21,21 +20,22 @@ public class Client {
 	
 	public String playerName = "!";
 	
-	public Client(GameServer game, SockJSSocket clientSocket) {
+	public Client(MapServer game, String clientServerAddress, String playerId) {
 		this.game = game;
-		this.clientSocket = clientSocket;
-	
+		this.clientServerAddress = clientServerAddress;
+		this.playerId = playerId;
 		game.clientConnected(this);
 	}
 	
 	public String getKey() {
-		return this.clientSocket.remoteAddress().toString();
+		return playerId;
 	}
 	
 	public void write(JsonObject jobj) {
-		Buffer buff = new Buffer();
-		buff.appendString(jobj.toString());
-		clientSocket.write(buff);
+		jobj.putString("playerId", this.playerId);
+		game.busSend(clientServerAddress, jobj);
+		System.out.println("CLIENT WRITE");
+		System.out.println(jobj);
 	}
 	
 	public void error(String error) {
@@ -111,6 +111,10 @@ public class Client {
 	
 	public String getPlayerId() {
 		return playerId;
+	}
+	
+	public void setPlayerId(String playerId) {
+		this.playerId = playerId;
 	}
 	
 	

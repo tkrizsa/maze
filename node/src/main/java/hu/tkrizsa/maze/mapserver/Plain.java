@@ -1,4 +1,4 @@
-package hu.tkrizsa.maze;
+package hu.tkrizsa.maze.mapserver;
 
 import org.vertx.java.core.json.JsonObject;
 

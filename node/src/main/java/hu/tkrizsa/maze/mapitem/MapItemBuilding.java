@@ -1,9 +1,9 @@
 package hu.tkrizsa.maze.mapitem;
 
 import org.vertx.java.core.json.JsonObject;
-import hu.tkrizsa.maze.GameServer;
-import hu.tkrizsa.maze.Section;
-import hu.tkrizsa.maze.util.SectionMap;
+import hu.tkrizsa.maze.mapserver.MapServer;
+import hu.tkrizsa.maze.mapserver.Section;
+import hu.tkrizsa.maze.mapserver.SectionMap;
 
 public class MapItemBuilding extends MapItemUniq {
 
@@ -16,7 +16,7 @@ public class MapItemBuilding extends MapItemUniq {
 	private int tileOffY;
 	private int tileOffX;
 
-	public MapItemBuilding(String className, GameServer server) {
+	public MapItemBuilding(String className, MapServer server) {
 		super(className, server);
 	}
 

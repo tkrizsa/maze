@@ -1,14 +1,14 @@
 package hu.tkrizsa.maze.mapitem;
 
-import hu.tkrizsa.maze.GameServer;
+import hu.tkrizsa.maze.mapserver.MapServer;
 import org.vertx.java.core.json.JsonObject;
 
 public class MapItemUniq extends MapItem {
-	private GameServer server;
+	private MapServer server;
 	private String key;
 	private boolean loaded = false;
 	
-	public MapItemUniq(String className, GameServer server) {
+	public MapItemUniq(String className, MapServer server) {
 		super(className);
 		this.server = server;
 	}
@@ -21,7 +21,7 @@ public class MapItemUniq extends MapItem {
 		return key;
 	}
 	
-	public GameServer getServer() {
+	public MapServer getServer() {
 		return server;
 	}
 	

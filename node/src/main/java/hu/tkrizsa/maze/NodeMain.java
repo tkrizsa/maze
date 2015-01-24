@@ -35,18 +35,24 @@ public class NodeMain extends Verticle {
 							}
 						}
 						
-						JsonArray cfg_gameservers = appConfig.getArray("gameservers");
+						JsonArray cfg_gameservers = appConfig.getArray("mapservers");
 						if (cfg_gameservers != null) {
 							for (int i = 0; i < cfg_gameservers.size(); i++) {
-								container.deployVerticle("hu.tkrizsa.maze.SocketServer", (JsonObject)cfg_gameservers.get(i));
+								container.deployVerticle("hu.tkrizsa.maze.mapserver.MapServer", (JsonObject)cfg_gameservers.get(i));
 							}
 						}
 						
-						JsonArray cfg_playerservers = appConfig.getArray("playerservers");
+						JsonArray cfg_playerservers = appConfig.getArray("objectservers");
 						if (cfg_playerservers != null) {
 							for (int i = 0; i < cfg_playerservers.size(); i++) {
-								System.out.println("deploy playerserver : ");
 								container.deployVerticle("hu.tkrizsa.maze.player.PlayerServer", (JsonObject)cfg_playerservers.get(i));
+							}
+						}
+						
+						JsonArray cfg_clientservers = appConfig.getArray("clientservers");
+						if (cfg_clientservers != null) {
+							for (int i = 0; i < cfg_clientservers.size(); i++) {
+								container.deployVerticle("hu.tkrizsa.maze.clientserver.ClientServer", (JsonObject)cfg_clientservers.get(i));
 							}
 						}
 						

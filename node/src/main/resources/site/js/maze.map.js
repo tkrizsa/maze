@@ -1,10 +1,7 @@
 /* ==================================================== MAPS ================================================ */
 
 Maze.prototype.sectionGetServerUrl = function(section) {
-	if (section.offX >= 0)
-		return 'http://localhost:8091/mazemaps';
-	else
-		return 'http://localhost:8093/mazemaps';
+	return 'http://localhost:8091/mazesocket';
 }
 
 // Maze.prototype.playerGetServerUrl = function(objectId) {
@@ -368,9 +365,7 @@ Maze.Server.prototype.stepIt = function() {
 		
 	var msg = {
 		cmd : 'init',
-		player : {
-			id : this.maze.hero.playerId
-		}
+		playerId :  this.maze.hero.playerId
 	};
 
 	

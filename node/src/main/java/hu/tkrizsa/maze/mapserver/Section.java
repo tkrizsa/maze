@@ -1,4 +1,4 @@
-package hu.tkrizsa.maze;
+package hu.tkrizsa.maze.mapserver;
 
 import java.util.List;
 import java.util.LinkedList;
@@ -15,7 +15,7 @@ import hu.tkrizsa.maze.mapitem.*;
 public class Section {
 
 	public String key;
-	public GameServer game;
+	public MapServer game;
 	public Plain plain;
 	private String plainId;
 	private int offX;
@@ -29,7 +29,7 @@ public class Section {
 	private Map<String, MapItemUniq> uniqItems = new HashMap<String, MapItemUniq>();
 	
 
-	public Section(GameServer game, Plain plain, String key) {
+	public Section(MapServer game, Plain plain, String key) {
 		String[] keyparts = key.split("#");
 		try {
 			plainId = keyparts[0];
@@ -45,7 +45,7 @@ public class Section {
 		this.key = key;
 		this.plain = plain;
 
-		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
+		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
 
 	}
 	
@@ -185,9 +185,9 @@ public class Section {
 		MapItem FLOOR = game.getSingle(plain.getDefaultFloor());
 		MapItem NOTHING = game.getSingle("Nothing");
 	
-		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
-		for (int y = 0; y < GameServer.SECTION_SIZE; y++) {
-			for (int x = 0; x < GameServer.SECTION_SIZE; x++) {
+		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
+		for (int y = 0; y < MapServer.SECTION_SIZE; y++) {
+			for (int x = 0; x < MapServer.SECTION_SIZE; x++) {
 				List<MapItem> ll = new LinkedList<MapItem>();
 				if (y+offY>=plain.getTop() && y+offY <= plain.getBottom() && x+offX>= plain.getLeft() && x+offX<= plain.getRight()) {
 					ll.add(FLOOR);
@@ -204,7 +204,7 @@ public class Section {
 	
 	// called back when loaded from cassandra
 	protected void loaded(JsonObject jdata) {
-		items = new ArrayList<List<MapItem>>(GameServer.SECTION_SIZE * GameServer.SECTION_SIZE);
+		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
 		uniqItems = new HashMap<String, MapItemUniq>();
 		
 		

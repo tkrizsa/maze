@@ -1,4 +1,4 @@
-package hu.tkrizsa.maze;
+package hu.tkrizsa.maze.mapserver;
 
 
 public class PlayerPos {
