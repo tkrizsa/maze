@@ -9,7 +9,7 @@ public class Player {
 	public String playerId;
 	public String playerName;
 	
-	public Player(String plyerId) {
+	public Player(String playerId) {
 		this.playerId = playerId;
 		if (pc == 0) {
 			this.playerName = "tkrizsa";

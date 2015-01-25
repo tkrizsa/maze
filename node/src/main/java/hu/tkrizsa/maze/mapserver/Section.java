@@ -341,7 +341,7 @@ public class Section {
 			for(SectionPlayer sectionPlayer : players.values()) {
 				JsonObject jplayer = new JsonObject();
 				jplayer.putString("id", sectionPlayer.getClient().getPlayerId());
-				jplayer.putString("name", sectionPlayer.getClient().playerName);
+				jplayer.putString("name", sectionPlayer.getClient().getPlayerName());
 				jplayer.putNumber("x", 	sectionPlayer.getClient().getPlayerX());
 				jplayer.putNumber("y", 	sectionPlayer.getClient().getPlayerY());
 				if (sectionPlayer.getFromKey() != null) {

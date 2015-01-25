@@ -55,19 +55,27 @@ public class MapServer extends Verticle {
 				System.out.println("TRAVERSE#"+serverId);
 				System.out.println(msg.body());
 		
+				thisServer.clientMessage(msg.body());
+			}
+		});
+		
+		eventBus.registerHandler("client.disconnected", new Handler<Message<JsonObject>>() {
+			@Override
+			public void handle(Message<JsonObject> msg) {
+				System.out.println("CLIENT.DISCONNECTED");
+				System.out.println(msg.body());
+				// for (Map.Entry<String, Client> e : clients.entrySet()) {
+					// System.out.println("++" + e.getKey() + " = " + e.getValue().getPlayerName());
+				// }
+				
 				String playerId = msg.body().getString("playerId");
 				Client client = clients.get(playerId);
-				if (client == null) {
-					String clientServerAddress = msg.body().getString("clientServerAddress");
-					client = new Client(thisServer, clientServerAddress, playerId);
-					clients.put(client.getPlayerId(), client);
-				}
-				thisServer.clientMessage(client, msg.body());
+				if (client != null) {
+					thisServer.clientRemove(client);
+				} 
 			}
-		
-		
-		
 		});
+		
 		
 		eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
 			@Override
@@ -159,16 +167,64 @@ public class MapServer extends Verticle {
 		return (MapItemBuilding)mi;
 	}
 	
-	public void clientConnected(Client client) {
-		clients.put(client.getKey(), client);
-	}
+	// public void clientConnected(Client client) {
+		// clients.put(client.getKey(), client);
+	// }
 	
 	public void clientRemove(Client client) {
+		System.out.println("REMOVE " + client.getPlayerId());
 		client.disconnected();
 		clients.remove(client.getKey());
 	}
 	
-	public void clientMessage(Client client, JsonObject msg) {
+	public void clientMessage(JsonObject msg) {
+
+		String playerId = msg.getString("playerId");
+		
+		Client client = clients.get(playerId);
+		if (client == null) {
+			String clientServerAddress = msg.getString("clientServerAddress");
+			client = new Client(this, clientServerAddress, playerId);
+			clients.put(client.getPlayerId(), client);
+			
+			
+			// if we just get a new playerId, check disconnected players, and remove this
+			String ask = awayPlayers.get(playerId); // disconnected section key
+			if (ask != null) {
+				awayPlayers.remove(playerId);
+				
+				// if section, where player away from is here yet, remove from it's awayPlayer list too.
+				Section asec = sections.get(ask);
+				if (asec != null) {
+					asec.removeAway(playerId);
+				}
+			}
+			
+			JsonObject plget = new JsonObject();
+			plget.putString("playerId", playerId);
+			
+			final Client finalClient = client;
+			System.out.println("--getplayer sent--");
+			eventBus.send("getplayer", plget, new Handler<Message<JsonObject>>() {
+				public void handle(Message<JsonObject> msg) {
+					System.out.println("--playername come--");
+					System.out.println(msg.body().getString("playerName"));
+					finalClient.setData(msg.body());
+				}
+			
+			});			
+			
+		}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 		String cmd = msg.getString("cmd");
 	
 		if ("init".equals(cmd)) {
@@ -190,56 +246,7 @@ public class MapServer extends Verticle {
 	public void clientMessageInit(final Client client, JsonObject msg) {
 	
 
-	
-		// Handle playerId. required!
-		String playerId = msg.getString("playerId");
-		if (playerId == null || "".equals("playerId")) {
-			client.error("no player id.");
-			return;
-		}
 		
-		if (client.playerId == null) {
-			client.playerId = playerId;
-			
-			// if we just get a new playerId, check disconnected players, and remove this
-			String ask = awayPlayers.get(playerId); // disconnected section key
-			if (ask != null) {
-				awayPlayers.remove(playerId);
-				
-				// if section, where player away from is here yet, remove from it's awayPlayer list too.
-				Section asec = sections.get(ask);
-				if (asec != null) {
-					asec.removeAway(playerId);
-				}
-			}
-			
-			JsonObject plget = new JsonObject();
-			plget.putString("playerId", playerId);
-			
-			/*eventBus.sendWithTimeout("getplayer", plget, 1000, new Handler<AsyncResult<Message<JsonObject>>>() {
-				public void handle(AsyncResult<Message<JsonObject>> result) {
-					if (result.succeeded()) {
-						System.out.println("I received a reply " + result.result());
-					} else {
-						System.err.println("No reply was received before the 1 second timeout!");
-						System.err.println(result.cause().toString());
-						System.err.println(result.cause().getMessage());
-						result.cause().printStackTrace();
-					}
-				}
-			});*/
-			eventBus.send("getplayer", plget, new Handler<Message<JsonObject>>() {
-				public void handle(Message<JsonObject> msg) {
-					System.out.println("--playername come--");
-					System.out.println(msg.body().getString("playerName"));
-					client.playerName = msg.body().getString("playerName");
-				}
-			
-			});
-			
-			
-
-		}
 		
 		
 		// Handle player position. Not required!

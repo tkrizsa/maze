@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 public class PlayerServer extends Verticle {
 
+	private String serverId;
 	public Map<String, Player> players = new HashMap<String, Player>();
 	public Map<String, GameObject> objects = new HashMap<String, GameObject>();
 	public SimpleFlake keygen = new SimpleFlake();
@@ -63,9 +64,43 @@ public class PlayerServer extends Verticle {
 		final JsonObject appConfig = container.config();
 		System.out.println(appConfig.toString());
 		
-		logger.info("player server started ....");
+		serverId = appConfig.getString("serverId");
+		
+		logger.info("player server started ...." + serverId);
 		loadObjects();
 		
+		
+		eventBus.registerHandler("traverse#" + serverId, new Handler<Message<JsonObject>>() {
+			@Override
+			public void handle(Message<JsonObject> msg) {
+				logger.info("TRAVERSE#" + serverId);
+				JsonObject jresp = new JsonObject();
+				jresp.putString("playerId", msg.body().getString("playerId"));
+				JsonArray jrespObjects = new JsonArray();
+				jresp.putArray("objects", jrespObjects);
+				JsonArray jobjectIds = msg.body().getArray("getObjects");
+				for (int i = 0; i < jobjectIds.size(); i++) {
+					String objectId = jobjectIds.get(i);
+					
+					GameObject obj = objects.get(objectId);
+					if (obj != null) {
+						jrespObjects.addObject(obj.getData());
+						continue;
+					}
+					
+					Player player = getPlayer(objectId);
+					if (player != null) {
+						jrespObjects.addObject(player.getData());
+						continue;
+					}
+				}
+				
+				eventBus.send(msg.body().getString("clientServerAddress"), jresp);
+
+			}			
+		
+		
+		});
 		
 		eventBus.registerHandler("queryobjects", new Handler<Message<JsonArray>>() {
 			@Override

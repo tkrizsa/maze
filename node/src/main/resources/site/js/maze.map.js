@@ -4,18 +4,22 @@ Maze.prototype.sectionGetServerUrl = function(section) {
 	return 'http://localhost:8091/mazesocket';
 }
 
-// Maze.prototype.playerGetServerUrl = function(objectId) {
-	// return 'http://localhost:8092/mazeplayers';
-// }
+Maze.prototype.objectGetServerUrl = function(objectId) {
+	return 'http://localhost:8091/mazesocket';
+}
 
-Maze.prototype.serverSubscribe = function(section) {
-	var url = this.sectionGetServerUrl(section);
+Maze.prototype.getServer = function(url) {
 	var server = this.servers[url];
 	if (typeof server == 'undefined') {
-
 		server = new Maze.Server(this, url);
 		this.servers[url] = server;
 	}
+	return server;
+}
+
+Maze.prototype.serverSubscribe = function(section) {
+	var url = this.sectionGetServerUrl(section);
+	var server = getServer(url);
 	
 	server.sectionAdd(section);
 	section.server = server;
@@ -33,6 +37,29 @@ Maze.prototype.serversStepIt = function() {
 	
 	if (!this.camera || !this.camera.follow)
 		return;
+		
+	if (!this.camera.follow.loaded) {
+		if (this.camera.follow.loadSent)
+			return;
+		
+		var playerId = this.camera.follow.playerId;
+		var msg = {
+			cmd : "init",
+			playerId : playerId,
+			getObjects : [playerId]
+		};
+		var url = this.objectGetServerUrl(playerId);
+		var server = this.getServer(url);
+		if (server.send(msg)) {
+			this.camera.follow.loadSent = this.timeNow;
+		}
+		return;
+	
+	
+	
+	}
+		
+		
 
 	var currSecX = Math.floor(this.camera.follow.tileX / this.SECTION_SIZE);
 	var currSecY = Math.floor(this.camera.follow.tileY / this.SECTION_SIZE);
@@ -169,8 +196,15 @@ Maze.Server.prototype.send = function(omsg) {
 	console.log("SENT TO SERVER");
 	console.log(msg);
 	
-	this.sock.send(msg);
+	try {
+		this.sock.send(msg);
+	} catch (ex) {
+		console.log("CANNOT SENT PACKAGE:");
+		console.log(ex.message);
+		return false;
+	}
 
+	return true;
 }
 
 Maze.Server.prototype.processResponse = function(data) {

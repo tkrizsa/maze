@@ -18,13 +18,12 @@ public class Client {
 	protected int playerX;
 	protected int playerY;
 	
-	public String playerName = "!";
+	private String playerName = "!";
 	
 	public Client(MapServer game, String clientServerAddress, String playerId) {
 		this.game = game;
 		this.clientServerAddress = clientServerAddress;
 		this.playerId = playerId;
-		game.clientConnected(this);
 	}
 	
 	public String getKey() {
@@ -34,8 +33,8 @@ public class Client {
 	public void write(JsonObject jobj) {
 		jobj.putString("playerId", this.playerId);
 		game.busSend(clientServerAddress, jobj);
-		System.out.println("CLIENT WRITE");
-		System.out.println(jobj);
+		// System.out.println("CLIENT WRITE");
+		// System.out.println(jobj);
 	}
 	
 	public void error(String error) {
@@ -115,6 +114,14 @@ public class Client {
 	
 	public void setPlayerId(String playerId) {
 		this.playerId = playerId;
+	}
+	
+	public void setData(JsonObject jdata) {
+		playerName = jdata.getString("playerName");
+	}
+	
+	public String getPlayerName() {
+		return playerName;
 	}
 	
 	
