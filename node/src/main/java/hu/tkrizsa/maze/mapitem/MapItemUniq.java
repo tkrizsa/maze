@@ -41,6 +41,6 @@ public class MapItemUniq extends MapItem {
 	}
 		
 	public void setData(JsonObject jdata) {
-		setKey(jdata.getString("objectKey"));
+		setKey(jdata.getString("objectId"));
 	}
 }

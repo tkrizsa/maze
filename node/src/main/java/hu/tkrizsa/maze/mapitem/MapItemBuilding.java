@@ -26,13 +26,18 @@ public class MapItemBuilding extends MapItemUniq {
 		System.out.println(jdata.toString());
 		setData(jdata);
 		
+		System.out.println("=========drawstart");
+		
 		SectionMap secs = new SectionMap();
 		
 		// round 1 check if all the sections exists here and are loaded
-		// to do! what happend if a section are in an other server?????!!!
 		for (int y = tileY + tileOffY; y < tileY + tileOffY + tileHeight; y ++) {
 			for (int x = tileX + tileOffX; x < tileX + tileOffX + tileWidth; x ++) {
 				String sectionKey = getServer().createSectionKey(plainId, x, y);
+				
+				// skip, if other server 
+				if (!(getServer().getMapServerId(sectionKey).equals(getServer().getServerId())))
+					continue;
 				if (secs.containsKey(sectionKey))
 					continue;
 					
@@ -48,7 +53,11 @@ public class MapItemBuilding extends MapItemUniq {
 		for (int y = tileY + tileOffY; y < tileY + tileOffY + tileHeight; y ++) {
 			for (int x = tileX + tileOffX; x < tileX + tileOffX + tileWidth; x ++) {
 				String sectionKey = getServer().createSectionKey(plainId, x, y);
+				if (!(getServer().getMapServerId(sectionKey).equals(getServer().getServerId())))
+					continue;
+				
 				Section section = secs.get(sectionKey);
+				System.out.println("========draw " + this.getKey() + "; " + x + "; " + y + "; " + sectionKey);
 				section.draw(x, y, this);
 			}
 		}

@@ -15,11 +15,18 @@ Maze.Obj.Building.extend = function(obj, maze, tileWidth, tileHeight) {
 	obj.drawPhase = 1;
 	
 	obj.placeTo = Maze.Obj.Building.placeTo;
+	obj.setData = Maze.Obj.Building.setData;
 	
 	obj.bind("drawIt", Maze.Obj.Building.buildingDrawIt);
+	
+
 }
 
 Maze.Obj.Building.buildingDrawIt = function(cam, left, top) {
+	this.hello = "leo";
+}
+
+Maze.Obj.Building.setData = function(jdata) {
 	this.hello = "leo";
 }
 

@@ -18,13 +18,20 @@ import org.vertx.java.core.json.JsonArray;
 
 import java.util.Map;
 import java.util.HashMap;
+import hu.tkrizsa.maze.MazeServer;
 
-public class PlayerServer extends Verticle {
+public class PlayerServer extends MazeServer {
 
 	private String serverId;
 	public Map<String, Player> players = new HashMap<String, Player>();
 	public Map<String, GameObject> objects = new HashMap<String, GameObject>();
 	public SimpleFlake keygen = new SimpleFlake();
+	
+	
+	
+	
+	
+	
 
 	public Player getPlayer(String playerId) {
 		Player player = players.get(playerId);
@@ -76,6 +83,7 @@ public class PlayerServer extends Verticle {
 				logger.info("TRAVERSE#" + serverId);
 				JsonObject jresp = new JsonObject();
 				jresp.putString("playerId", msg.body().getString("playerId"));
+				jresp.putString("cmd", "init");
 				JsonArray jrespObjects = new JsonArray();
 				jresp.putArray("objects", jrespObjects);
 				JsonArray jobjectIds = msg.body().getArray("getObjects");
@@ -98,31 +106,30 @@ public class PlayerServer extends Verticle {
 				eventBus.send(msg.body().getString("clientServerAddress"), jresp);
 
 			}			
-		
-		
 		});
+		
 		
 		eventBus.registerHandler("queryobjects", new Handler<Message<JsonArray>>() {
 			@Override
 			public void handle(Message<JsonArray> msg) {
 				logger.info("QUERYOBJECTS");
 				logger.info(msg.body().toString());
-				JsonArray jresp = new JsonArray();
-				JsonArray jkeys = msg.body();
-				for (int i = 0; i < jkeys.size(); i++) {
-					String key = (String)jkeys.get(i);
-					GameObject obj = objects.get(key);
-					if (obj != null) {
-						System.out.println("* found : " + key);
-						jresp.add(obj.getData());
+				// JsonArray jresp = new JsonArray();
+				// JsonArray jkeys = msg.body();
+				// for (int i = 0; i < jkeys.size(); i++) {
+					// String key = (String)jkeys.get(i);
+					// GameObject obj = objects.get(key);
+					// if (obj != null) {
+						// System.out.println("* found : " + key);
+						// jresp.add(obj.getData());
 					
-					} else {
-						System.out.println("* not found : " + key);
-					}
+					// } else {
+						// System.out.println("* not found : " + key);
+					// }
 				
-				}
+				// }
 			
-				eventBus.publish("objectdata", jresp);
+				// eventBus.publish("objectdata", jresp);
 			}
 		});
 
@@ -130,23 +137,29 @@ public class PlayerServer extends Verticle {
 			@Override
 			public void handle(Message<JsonObject> msg) {
 				logger.info("GETPLAYER");
-				Player player = getPlayer(msg.body().getString("playerId"));
+				// Player player = getPlayer(msg.body().getString("playerId"));
 			
-				msg.reply(player.getData());
+				// msg.reply(player.getData());
 			}
 		});
 
-		eventBus.registerHandler("build", new Handler<Message<JsonObject>>() {
+		eventBus.registerHandler("build#" + serverId, new Handler<Message<JsonObject>>() {
 			@Override
 			public void handle(Message<JsonObject> msg) {
 				logger.info("BUILD");
 				
-				String playerId 	= msg.body().getString("playerId");
+				final String clientServerAddress 	= msg.body().getString("clientServerAddress");
+				final String playerId 	= msg.body().getString("playerId");
+				String objectId 				= msg.body().getString("objectId");
 				String className 	= msg.body().getString("className");
 				String plainId 		= msg.body().getString("plainId");
 				Integer tileX		= msg.body().getInteger("tileX");
 				Integer tileY		= msg.body().getInteger("tileY");
 				
+				if (objectId == null || "".equals(objectId)) {
+					replyError(msg, "Missing object id in build.");
+					return;
+				}
 				if (playerId == null || "".equals(playerId)) {
 					replyError(msg, "Missing player id in build.");
 					return;
@@ -161,7 +174,8 @@ public class PlayerServer extends Verticle {
 				}
 				
 				
-				GameObject newObject = createBuildingByClassName(className, plainId, tileX, tileY);
+				final GameObjectBuilding newObject = createBuildingByClassName(className, plainId, tileX, tileY);
+				newObject.setObjectId(objectId); // should do in constructor
 				
 				if (newObject == null) {
 					replyError(msg, "Invalid classname.");
@@ -169,14 +183,33 @@ public class PlayerServer extends Verticle {
 				}
 				
 				newObject.addOwner(playerId, 100.0f);
-				objects.put(newObject.getKey(), newObject);
 				
-				System.out.println("------> i respnose to build:");
-				System.out.println(newObject.getData().toString());
-				System.out.println("<------");
+				newObject.placeIt(new Handler<String> () {
+					@Override
+					public void handle(String msg) {
+						if (!("ok".equals(msg))) {
+							JsonObject jerr = new JsonObject();
+							jerr.putString("error", msg);
+							jerr.putString("playerId", playerId);
+							eventBus.send(clientServerAddress, jerr);
+						} else {
+							objects.put(newObject.getObjectId(), newObject);
+							saveObject(newObject);
+						
+						}
+					
+					}
 				
-				msg.reply(newObject.getData());
-				saveObject(newObject);
+				});
+				
+				// 
+				
+				// System.out.println("------> i respnose to build:");
+				// System.out.println(newObject.getData().toString());
+				// System.out.println("<------");
+				
+				// msg.reply(newObject.getData());
+				// saveObject(newObject);
 			}
 		
 		
@@ -193,7 +226,7 @@ public class PlayerServer extends Verticle {
 		req.putString("action", "prepared");
 		req.putString("statement", "INSERT INTO maze.objects (objectKey, className, objectData) VALUES (?, ?, ?)");
 		JsonArray v0 = new JsonArray();
-		v0.addString(obj.getKey());
+		v0.addString(obj.getObjectId());
 		v0.addString(obj.getClassName());
 		v0.addString(obj.getData().toString());
 		JsonArray values = new JsonArray();
@@ -235,13 +268,13 @@ public class PlayerServer extends Verticle {
 						System.err.println("Class not found (loaded from db) : '" + (className==null?"NULL":className) + "'");
 					}
 					obj.setData(jdata);
-					objects.put(obj.getKey(), obj);
+					objects.put(obj.getObjectId(), obj);
 					
-					System.out.println("------------loaded object---------------");
-					System.out.println(objectKey);
-					System.out.println(obj.getKey());
-					System.out.println(obj.getData().toString());
-					System.out.println("------------");
+					// System.out.println("------------loaded object---------------");
+					// System.out.println(objectKey);
+					// System.out.println(obj.getObjectId());
+					// System.out.println(obj.getData().toString());
+					// System.out.println("------------");
 					
 				} 
 			}

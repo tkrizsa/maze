@@ -19,7 +19,7 @@ Maze.prototype.getServer = function(url) {
 
 Maze.prototype.serverSubscribe = function(section) {
 	var url = this.sectionGetServerUrl(section);
-	var server = getServer(url);
+	var server = this.getServer(url);
 	
 	server.sectionAdd(section);
 	section.server = server;
@@ -224,6 +224,25 @@ Maze.Server.prototype.processResponse = function(data) {
 	
 	if (data.cmd != "init")
 		return;
+		
+		
+	// If server sent objects
+	if (data.objects) {
+		var jitems = data.objects;
+		for (var i in jitems) {
+			var jitem = jitems[i];
+			var objectKey = jitem.objectId;
+			if (!objectKey)
+				objectKey = jitem.playerId;
+			var obj = this.maze.objs[objectKey];
+			if (!obj) {
+				console.log("Unknown object data from server : " + objectKey);
+				continue;
+			}
+			obj.setData(jitem);
+		}
+	}
+		
 	
 	for (var rsection_key in data.sections) {
 		var section = this.maze.subscribedSections[rsection_key];
@@ -237,7 +256,8 @@ Maze.Server.prototype.processResponse = function(data) {
 		
 		
 		// If server sent uniq objects
-		if (rsection.uniqitems) {
+		
+		/*if (rsection.uniqitems) {
 			var jitems = rsection.uniqitems;
 			for (var i in jitems) {
 				var jitem = jitems[i];
@@ -250,12 +270,10 @@ Maze.Server.prototype.processResponse = function(data) {
 					obj.tileX = jitem.tileX;
 					obj.tileY = jitem.tileY;
 					obj.objectKey = jitem.objectKey;
-			
 				}
 			}
+		}*/
 		
-		
-		}
 		
 		
 		// If server sent back the item map of section, load it
@@ -270,8 +288,8 @@ Maze.Server.prototype.processResponse = function(data) {
 			for (var i in rsection.players) {
 				var rplayer = rsection.players[i];
 				
-				var player = this.maze.objByPlayerId(rplayer.id);
-				if (rplayer.name) player.playerName = rplayer.name;
+				var player = this.maze.objs[rplayer.id];
+			
 				
 				if (rplayer.id == this.maze.hero.playerId) {
 					continue;
@@ -281,7 +299,7 @@ Maze.Server.prototype.processResponse = function(data) {
 					player.away = false;
 				} else {
 					player = new Maze.Obj.Hero(this.maze);
-					this.maze.objs.push(player);
+					this.maze.objs[rplayer.id] = player;
 					player.playerId = rplayer.id;
 					if (!isNewSection && rplayer.fromKey) {
 						var fromPlainId = rplayer.fromKey.split("#")[0];
@@ -312,7 +330,7 @@ Maze.Server.prototype.processResponse = function(data) {
 					continue;
 					
 				// look for player by id
-				var player = this.maze.objByPlayerId(playerId);
+				var player = this.maze.objs[playerId];
 				
 				// if player found remove it.
 				if (player) {
@@ -391,38 +409,58 @@ Maze.Server.prototype.sectionRemove = function(section) {
 }
 
 Maze.Server.prototype.stepIt = function() {
-	if (this.playerStatusSent && this.sectionStatusSent)
+
+	var notLoadedObject = false;
+	var msg = {
+		cmd : 'init',
+		playerId :  this.maze.hero.playerId
+	};
+	
+	for (var objectId in this.maze.objs) {
+		
+		var obj = this.maze.objs[objectId];
+		if (!obj.loaded && !obj.loadSent) {
+			notLoadedObject = true;
+			if (!msg.getObjects) {
+				msg.getObjects = [];
+			}
+			msg.getObjects.push(objectId);
+			obj.loadSent = this.maze.timeNow;
+		}
+	}
+
+
+	if (this.playerStatusSent && this.sectionStatusSent && !notLoadedObject)
 		return;
 		
 	if (this.sock.readyState !== SockJS.OPEN)
 		return;
 		
-	var msg = {
-		cmd : 'init',
-		playerId :  this.maze.hero.playerId
-	};
 
 	
-	if (this.playerKey !== false) {
-		msg.playerPos = {
-			key : this.playerKey,
-			x : this.playerX,
-			y : this.playerY
-		}
-	}
-	
-	
-	if (!this.sectionStatusSent) {
-		msg.subscribe = new Array();
-		for (var key in this.sections) {
-			var section = this.sections[key];
-			var x = {key : key};
-			if (!section.loaded) {
-				x.mapNeeded = true;
+	if (!this.playerStatusSent || !this.sectionStatusSent) {
+		if (this.playerKey !== false) {
+			msg.playerPos = {
+				key : this.playerKey,
+				x : this.playerX,
+				y : this.playerY
 			}
-			msg.subscribe.push(x);
+		}
+		
+		
+		if (!this.sectionStatusSent) {
+			msg.subscribe = new Array();
+			for (var key in this.sections) {
+				var section = this.sections[key];
+				var x = {key : key};
+				if (!section.loaded) {
+					x.mapNeeded = true;
+				}
+				msg.subscribe.push(x);
+			}
 		}
 	}
+	
 	
 		
 	this.send(msg);
@@ -740,11 +778,12 @@ Maze.Section.prototype.deSerialize = function(result) {
 						var objectKey = objar[1];
 						obj = this.plain.maze.objs[objectKey];
 						if (!obj) {
-							console.log("Object missing : " + result.objects[items[i]]);
-							continue;
-							// obj = new Maze.Obj[className]();
-							// obj.objectKey = objectKey;
-							// this.plain.maze.objs[objectKey] = obj;
+							// console.log("Object missing : " + result.objects[items[i]]);
+							// continue;
+							obj = new Maze.Obj[className](this);
+							obj.objectKey = objectKey;
+							obj.plain = this.plain;
+							this.plain.maze.objs[objectKey] = obj;
 						}
 					}
 				} else {

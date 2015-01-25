@@ -84,16 +84,12 @@ Maze = function(domSelector) {
 	this.subscribedSections = {};		// list of subscribed sections referenced by sectionKey
 	this.currPlayerServer = false;
 	this.plains = {};					// list of plains referenced by plainId
-	
-
-	
-	this.objs = new Array();
+	this.objs = {};  					// list of uniq objects indexed by objectId
 
 	this.hero = new Maze.Obj.Hero(this);
 	this.hero.playerId = this.playerRecord.playerId;
-	this.objs.push(this.hero);
+	this.objs[this.hero.playerId] = this.hero;
 	this.heroPlaced = false;
-	
 	
 	this.camera.follow = this.hero;
 	
@@ -647,14 +643,15 @@ Maze.prototype.drawPut = function(mouse) {
 		var section = plain.getSection(mouse.tileX, mouse.tileY);
 			
 		var msg = {
-			cmd : 'draw',
-			items : []
+			cmd 		: 'draw',
+			playerId 	: this.hero.playerId,
+			items 		: []
 		}
 		msg.items.push({
 			className : obj.className,
-			x : mouse.tileX,
-			y : mouse.tileY,
-			sectionKey : section.getKey()
+			plainId : plain.plainId,
+			tileX : mouse.tileX,
+			tileY : mouse.tileY
 		});
 		msgs[section.server.url] = msg;
 		
@@ -665,24 +662,25 @@ Maze.prototype.drawPut = function(mouse) {
 				var msg = msgs[section.server.url];
 				if (!msg) {
 					msg = {
-						cmd : 'draw',
-						items : []
+						cmd 		: 'draw',
+						playerId 	: this.hero.playerId,
+						items 		: []
 					}
 					msgs[section.server.url] = msg;
 				}
 				
 				msg.items.push({
 					className : obj.className,
-					x : mouse.tileX+n.x,
-					y : mouse.tileY+n.y,
-					sectionKey : section.getKey()
+					plainId : plain.plainId,
+					tileX : mouse.tileX+n.x,
+					tileY : mouse.tileY+n.y
 				});
 			}
 		}
 		for (var url in msgs) {
 			var server = this.servers[url];
 			var msg = msgs[url];
-			server.sock.send(JSON.stringify(msg));
+			server.send(msg);
 		}
 	}
 

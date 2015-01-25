@@ -42,6 +42,11 @@ Maze.Obj.Hero = function(maze) {
 	this.playerName = "?";
 }
 
+Maze.Obj.Hero.prototype.setData = function(jdata) {
+	this.playerName = jdata.playerName;
+	this.loaded = true;
+}
+
 Maze.Obj.Hero.prototype.heroDrawIt = function(cam, left, top) {
 	var fos = Math.max(Math.ceil(cam.TILE_HEIGHT / 4),11);
 	cam.ctx.font = "bold " + fos + "px Arial";
@@ -129,6 +134,7 @@ Maze.Obj.Hero.prototype.arrived = function() {
 			
 			var msg = {
 				cmd 		: 'build',
+				playerId	: this.playerId,
 				tileX 		: this.commandTileX,
 				tileY		: this.commandTileY,
 				plainId 	: this.plain.plainId,

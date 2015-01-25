@@ -2,8 +2,12 @@ package hu.tkrizsa.maze.player;
 
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import java.util.List;
 import java.util.ArrayList;
+import hu.tkrizsa.maze.util.SmallMap;
 
 
 public class GameObjectBuilding extends GameObject {
@@ -59,6 +63,55 @@ public class GameObjectBuilding extends GameObject {
 	
 	}
 	
+	
+	private class ResponseCounter {
+		public int responseCount = 0;
+	}
+	
+	public void placeIt(final Handler<String> clientHandler) {
+		final List<String> servers = new ArrayList<String>();
+		
+		// collect involved MapServers
+		for (int y = tileY + tileOffY; y < tileY + tileOffY + tileHeight; y ++) {
+			for (int x = tileX + tileOffX; x < tileX + tileOffX + tileWidth; x ++) {
+				String sectionKey = getServer().createSectionKey(plainId, x, y);
+				String serverId = getServer().getMapServerId(sectionKey);
+				if (!servers.contains(serverId)) 
+					servers.add(serverId);
+				
+			}
+		}
+		
+		// send build.temp for all mapservers
+		final ResponseCounter rc = new ResponseCounter();
+		JsonObject jobj = this.getData();
+		
+		for (String serverId : servers) {
+			getServer().getEventBus().send("build.temp#" + serverId, jobj, new Handler<Message<JsonObject>>() {
+				@Override 
+				public void handle(Message<JsonObject> msg) {
+					System.out.println("--------------- build temp returned ----------------------");
+					System.out.println(msg.body());
+					if ("ok".equals(msg.body().getString("status"))) {
+						rc.responseCount++;
+						if (rc.responseCount == servers.size()) {
+							clientHandler.handle("ok");
+						}
+					} else {
+						String error = msg.body().getString("message");
+						if (error == null) 
+							error = "something went wrong with build (temp phase)";
+						clientHandler.handle(error);
+					}
+				
+				}
+			
+			
+			});
+		
+		}
+	
+	}
 
 }
 

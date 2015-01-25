@@ -45,7 +45,7 @@ public class Section {
 		this.key = key;
 		this.plain = plain;
 
-		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
+		items = new ArrayList<List<MapItem>>(game.SECTION_SIZE * game.SECTION_SIZE);
 
 	}
 	
@@ -185,9 +185,9 @@ public class Section {
 		MapItem FLOOR = game.getSingle(plain.getDefaultFloor());
 		MapItem NOTHING = game.getSingle("Nothing");
 	
-		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
-		for (int y = 0; y < MapServer.SECTION_SIZE; y++) {
-			for (int x = 0; x < MapServer.SECTION_SIZE; x++) {
+		items = new ArrayList<List<MapItem>>(game.SECTION_SIZE * game.SECTION_SIZE);
+		for (int y = 0; y < game.SECTION_SIZE; y++) {
+			for (int x = 0; x < game.SECTION_SIZE; x++) {
 				List<MapItem> ll = new LinkedList<MapItem>();
 				if (y+offY>=plain.getTop() && y+offY <= plain.getBottom() && x+offX>= plain.getLeft() && x+offX<= plain.getRight()) {
 					ll.add(FLOOR);
@@ -204,9 +204,10 @@ public class Section {
 	
 	// called back when loaded from cassandra
 	protected void loaded(JsonObject jdata) {
-		items = new ArrayList<List<MapItem>>(MapServer.SECTION_SIZE * MapServer.SECTION_SIZE);
+		items = new ArrayList<List<MapItem>>(game.SECTION_SIZE * game.SECTION_SIZE);
 		uniqItems = new HashMap<String, MapItemUniq>();
 		
+
 		
 		
 		JsonArray jobjects = jdata.getArray("objects");
@@ -257,7 +258,9 @@ public class Section {
 			
 		}
 		
-		if (uniqItems.size() == 0) {
+		setLoaded(true);
+		
+		/*if (uniqItems.size() == 0) {
 			setLoaded(true);
 		} else {
 			JsonArray jquery = new JsonArray();
@@ -266,6 +269,7 @@ public class Section {
 			}
 			game.queryObjects(jquery);
 		}
+		*/
 	}
 	
 	public void processObjectData(JsonArray jobjects) {

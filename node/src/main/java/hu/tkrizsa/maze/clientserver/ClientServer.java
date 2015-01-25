@@ -20,12 +20,14 @@ import java.util.Map;
 import java.util.HashMap;
 
 import hu.tkrizsa.maze.util.SmallMap;
+import hu.tkrizsa.maze.MazeServer;
 
-public class ClientServer extends Verticle {
+public class ClientServer extends MazeServer {
+
 
 	String clientServerId;
 	final Map<String, SocketClient> clients = new HashMap<String, SocketClient>();
-
+	
 	private class SocketClient {
 		public String playerId;
 		public SockJSSocket sock;
@@ -36,23 +38,6 @@ public class ClientServer extends Verticle {
 	}
 	
 
-	public String getMapServerId(String sectionKey) throws Exception {
-		String[] parts = sectionKey.split("#");
-		if (parts.length != 3)
-			throw new Exception("Sectionkey error, not 3 parts");
-		int x = Integer.parseInt(parts[1]);
-		if (x>=0) {
-			return "map00";
-		} else {
-			return "map01";
-		}
-	
-	}
-
-	public String getObjectServerId(String objectId) throws Exception {
-		return "obj00";
-	
-	}
 
 
 	@Override
@@ -60,7 +45,7 @@ public class ClientServer extends Verticle {
 		final Logger logger = container.logger();
 		final EventBus eventBus = vertx.eventBus();
 		final JsonObject appConfig = container.config();
-		//final SimpleFlake keygen = new SimpleFlake();
+		
 		
 		System.out.println("Clientserver starting....");
 		System.out.println(appConfig.toString());
@@ -129,11 +114,12 @@ public class ClientServer extends Verticle {
 
 							
 							String cmd = msg.getString("cmd");
+							/* ================================================================ INIT ============================================================= */
 							if ("init".equals(cmd)) {
-								
-								/* ==================================== playerpos =================================== */
 								SmallMap<String, JsonObject> forwards = new SmallMap<String, JsonObject>();
 								String serverId;
+								
+								/* ==================================== playerpos =================================== */
 								JsonObject playerPos = msg.getObject("playerPos");
 								if (playerPos != null) {
 									serverId = getMapServerId(playerPos.getString("key"));
@@ -203,6 +189,47 @@ public class ClientServer extends Verticle {
 									eventBus.send("traverse#" + entry.getKey(), entry.getValue());
 								
 								}
+							/* ================================================================ DRAW ============================================================= */
+							} else if ("draw".equals(cmd)) {
+								SmallMap<String, JsonObject> forwards = new SmallMap<String, JsonObject>();
+							
+								JsonArray jitems = msg.getArray("items");
+								for (int i = 0; i < jitems.size(); i++) {
+									JsonObject jitem 	= jitems.get(i);
+									String plainId 		= jitem.getString("plainId");
+									int    tileX		= jitem.getInteger("tileX");
+									int    tileY		= jitem.getInteger("tileY");
+									String serverId 	= getMapServerId(plainId, tileX, tileY);
+									JsonObject forward = forwards.get(serverId);
+									if (forward == null) {
+										forward = new JsonObject();
+										forward.putString("cmd", "draw");
+										forward.putString("playerId", socketclient.playerId);
+										forward.putString("clientServerAddress", "client#" + clientServerId);
+										forwards.put(serverId, forward);
+									}
+									JsonArray fitems = forward.getArray("items");
+									if (fitems == null) {
+										fitems = new JsonArray();
+										forward.putArray("items", fitems);
+									}
+									fitems.addObject(jitem);
+								}
+								
+								for (Map.Entry<String, JsonObject> entry : forwards.entrySet()) {
+									System.out.println("send draw forward " + entry.getKey());
+									System.out.println(entry.getValue());
+									
+									eventBus.send("draw#" + entry.getKey(), entry.getValue());
+								}
+								
+							/* ================================================================ BUILD ============================================================= */
+							} else if ("build".equals(cmd)) {
+								String objectId = generateId();
+								String serverId = getObjectServerId(objectId);
+								msg.putString("clientServerAddress", "client#" + clientServerId);
+								msg.putString("objectId", objectId);
+								eventBus.send("build#" + serverId, msg);
 							} else {
 								logger.error("invalid cmd in client message.");
 								return;

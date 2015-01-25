@@ -10,7 +10,7 @@ public class GameObject {
 
 	private String className;
 	private PlayerServer server;
-	private String key;
+	private String objectId;
 	private List<Owner> owners = new ArrayList<Owner>();
 	
 	
@@ -19,15 +19,19 @@ public class GameObject {
 	public GameObject(String className, PlayerServer server) {
 		this.className = className;
 		this.server = server;
-		this.key = server.generateKey();
+		this.objectId = server.generateKey();
 	}
 	
-	public String getKey() {
-		return key;
+	public PlayerServer getServer() {
+		return server;
 	}
 	
-	public void setKey(String key) {
-		this.key = key;
+	public String getObjectId() {
+		return objectId;
+	}
+	
+	public void setObjectId(String objectId) {
+		this.objectId = objectId;
 	}
 	
 	public String getClassName() {
@@ -40,13 +44,13 @@ public class GameObject {
 	
 	public JsonObject getData() {
 		JsonObject jdata = new JsonObject();
-		jdata.putString("objectKey", getKey());
+		jdata.putString("className", getClassName());
+		jdata.putString("objectId", getObjectId());
 		return jdata;
 	}
 	
 	public void setData(JsonObject jdata) {
-		System.out.println("itt es beallitom a key-t : " + jdata.getString("objectKey"));
-		setKey(jdata.getString("objectKey"));
+		setObjectId(jdata.getString("objectId"));
 	}
 	
 	/* ================================= Owner class ================================= */

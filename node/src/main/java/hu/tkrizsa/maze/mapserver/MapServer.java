@@ -15,8 +15,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 import hu.tkrizsa.maze.mapitem.*;
+import hu.tkrizsa.maze.MazeServer;
 
-public class MapServer extends Verticle {
+public class MapServer extends MazeServer {
 
 	private EventBus eventBus;
 	final Map<String, Plain> plains = new HashMap<String, Plain>();
@@ -27,9 +28,11 @@ public class MapServer extends Verticle {
 	// only purpose to remove from section's away list if comes fast back here
 	final Map<String, String> awayPlayers = new HashMap<String, String>(); // playerId -> sectionKey
 	
-	public final static int SECTION_SIZE = 16;
 	
 	private String serverId;
+	public String getServerId() {
+		return serverId;
+	}
 
 
 	@Override
@@ -63,10 +66,6 @@ public class MapServer extends Verticle {
 			@Override
 			public void handle(Message<JsonObject> msg) {
 				System.out.println("CLIENT.DISCONNECTED");
-				System.out.println(msg.body());
-				// for (Map.Entry<String, Client> e : clients.entrySet()) {
-					// System.out.println("++" + e.getKey() + " = " + e.getValue().getPlayerName());
-				// }
 				
 				String playerId = msg.body().getString("playerId");
 				Client client = clients.get(playerId);
@@ -75,21 +74,69 @@ public class MapServer extends Verticle {
 				} 
 			}
 		});
-		
-		
-		eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
+
+		eventBus.registerHandler("draw#" + serverId, new Handler<Message<JsonObject>>() {
 			@Override
-			public void handle(Message<JsonArray> msg) {
-				System.out.println("OBJECTDATA");
+			public void handle(Message<JsonObject> msg) {
+				System.out.println("DRAW#"+serverId);
 				System.out.println(msg.body());
-				JsonArray jobjects = msg.body();
-				
-				for (Section section : sections.values()) {
-					section.processObjectData(jobjects);
-				}
-				
+		
+				thisServer.clientMessage(msg.body());
 			}
 		});
+		
+
+		// obsolte... i think
+		// eventBus.registerHandler("objectdata", new Handler<Message<JsonArray>>() {
+			// @Override
+			// public void handle(Message<JsonArray> msg) {
+				// System.out.println("OBJECTDATA");
+				// System.out.println(msg.body());
+				// JsonArray jobjects = msg.body();
+				
+				// for (Section section : sections.values()) {
+					// section.processObjectData(jobjects);
+				// }
+				
+			// }
+		// });
+		
+		eventBus.registerHandler("build.temp#" + serverId, new Handler<Message<JsonObject>>() {
+			@Override
+			public void handle(Message<JsonObject> msg) {
+				System.out.println("BUILD.TEMP#"+serverId);
+				System.out.println(msg.body());
+		
+				try {
+					final Plain plain = plains.get(msg.body().getString("plainId"));
+					if (plain == null) {
+						throw new Exception("Invalid plainId.");
+					}
+					
+					final String className = msg.body().getString("className");
+					final MapItemBuilding building = getMapItemBuilding(className);
+
+					if (building == null) {
+						throw new Exception("Invalid className.");
+					}
+					
+					building.placeTo(msg.body());
+					
+					//throw new Exception("not yet implemented.");
+				
+					JsonObject jerr = new JsonObject();
+					jerr.putString("status", "ok");
+					msg.reply(jerr);
+
+				} catch (Exception ex) {
+					JsonObject jerr = new JsonObject();
+					jerr.putString("status", "error");
+					jerr.putString("message", "build.temp: " + ex.toString());
+					msg.reply(jerr);
+				}
+			}
+		});
+		
 
 	}
 	
@@ -216,15 +263,6 @@ public class MapServer extends Verticle {
 			
 		}	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 		String cmd = msg.getString("cmd");
 	
 		if ("init".equals(cmd)) {
@@ -233,8 +271,6 @@ public class MapServer extends Verticle {
 			clientMessageDraw(client, msg);
 		} else if ("dig".equals(cmd)) {
 			clientMessageDig(client, msg);
-		} else if ("build".equals(cmd)) {
-			clientMessageBuild(client, msg);
 		} else {
 			client.error("unknown command : " + cmd);
 		
@@ -244,11 +280,6 @@ public class MapServer extends Verticle {
 	
 
 	public void clientMessageInit(final Client client, JsonObject msg) {
-	
-
-		
-		
-		
 		// Handle player position. Not required!
 		// if not present : he walks on a section of an other server, but he has subscibed section on this server
 		JsonObject jpos = msg.getObject("playerPos");
@@ -327,20 +358,25 @@ public class MapServer extends Verticle {
 		}
 	}
 
+	/* ========================================== DRAW =============================================== */
 	public void clientMessageDraw(Client client, JsonObject xmsg) {
 		Map<String, Section> secs = new HashMap<String, Section>();
 		JsonArray jitems = xmsg.getArray("items");
 		for (int j = 0; j < jitems.size(); j++) {
 			JsonObject msg = (JsonObject)jitems.get(j);
 	
-			String key 			= msg.getString("sectionKey");
-			if (key == null) {
-				client.error("key is null");
+			String plainId		= msg.getString("plainId");
+			Integer tileX		= msg.getInteger("tileX");
+			Integer tileY		= msg.getInteger("tileY");
+			String className	= msg.getString("className");
+			if (plainId == null || tileX == null || tileY == null || className == null) {
+				client.error("draw : invalid message");
 				return;
 			}
-			Section section 	= sectionGet(key);
+			String sectionKey = createSectionKey(plainId, tileX, tileY);
+			Section section 	= sectionGet(sectionKey);
 			if (section == null) {
-				client.error("Invalid section : " + key);
+				client.error("Invalid section : " + sectionKey);
 				return;
 			}
 			
@@ -351,9 +387,6 @@ public class MapServer extends Verticle {
 			
 			secs.put(section.getKey(), section);
 			
-			Integer x 			= msg.getInteger("x");
-			Integer y 			= msg.getInteger("y");
-			String className	= msg.getString("className");
 			MapItem item		= getSingle(className);
 			if (item == null) {
 				client.error("Class not found : " + className);
@@ -361,13 +394,14 @@ public class MapServer extends Verticle {
 			}
 			
 			
-			section.draw(x, y, item);
+			section.draw(tileX, tileY, item);
 		}
 		for (Section section : secs.values()) {
 			section.drawEnd();
 		}
 	}
 	
+	/* ========================================== DIG =============================================== */
 	public void clientMessageDig(Client client, JsonObject msg) {
 		String plainId = msg.getString("plainId");
 		if (plainId == null) {
@@ -422,57 +456,11 @@ public class MapServer extends Verticle {
 		section.drawEnd();
 	}
 	
-	/* ========================================== BUILD =============================================== */
-	public void clientMessageBuild(final Client client, JsonObject msg) {
-		System.out.println("->Build from client");
-		
-		final Plain plain = plains.get(msg.getString("plainId"));
-		if (plain == null) {
-			client.error("Invalid plainId.");
-			return;
-		}
-		
-		final String className = msg.getString("className");
-		final MapItemBuilding building = getMapItemBuilding(className);
-	
-		msg.putString("playerId",client.playerId);
-	
-		eventBus.send("build", msg, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> msg) {
-				System.out.println("->Build returned");
-				System.out.println(msg.toString());
-				
-				String error = msg.body().getString("error");
-				if (error != null) {
-					client.error(error);
-					return;
-				}
-				
-				//building.setKey(msg.body().getString("objectKey")); /// placeTo do this..
-				try {
-					building.placeTo(msg.body());
-				} catch (Exception ex) {
-					client.error(ex.getMessage());
-					return;
-				
-				}
-
-				
-			}
-		
-		});
-				
-	}
 	
 	
 	
 	/* ======================================= MISC ============================================= */
 	
-	public String createSectionKey(String plainId, int x, int y) {
-		int secX = x>=0 ? x / SECTION_SIZE : ~(~x / SECTION_SIZE);
-		int secY = y>=0 ? y / SECTION_SIZE : ~(~y / SECTION_SIZE);
-		return plainId + "#" + secX + "#" + secY;
-	}
 	
 	public Section sectionGetExisting(String key) {
 		return sections.get(key);
@@ -497,10 +485,6 @@ public class MapServer extends Verticle {
 		return section;
 	}
 	
-	public String getPlainIdOfKey(String key) {
-		String[] keyparts = key.split("#");
-		return keyparts[0];
-	}
 	
 	public void queryObjects(JsonArray objects) {
 		eventBus.publish("queryobjects", objects);
