@@ -3,7 +3,7 @@
 Maze = function(domSelector) {
 
 	this.playerRecord = {
-		playerId 	: 'player' + (Math.round(Math.random()*90000) + 10000),
+		//playerId 	: 'player' + (Math.round(Math.random()*90000) + 10000),
 		sectionKey 	: "earth#-1#0",
 		x 			: -7,
 		y 			:  13,
@@ -86,12 +86,7 @@ Maze = function(domSelector) {
 	this.plains = {};					// list of plains referenced by plainId
 	this.objs = {};  					// list of uniq objects indexed by objectId
 
-	this.hero = new Maze.Obj.Hero(this);
-	this.hero.playerId = this.playerRecord.playerId;
-	this.objs[this.hero.playerId] = this.hero;
-	this.heroPlaced = false;
-	
-	this.camera.follow = this.hero;
+	this.hero = null;
 	
 	this.timeLast = new Date().getTime();
 	
@@ -819,4 +814,29 @@ Maze.prototype.drawTerrainCorrect = function(plain, terrainClass) {
 			}
 		}
 	}
+}
+
+Maze.prototype.createCookie = function(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+Maze.prototype.readCookie = function(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+Maze.prototype.eraseCookie = function(name) {
+    createCookie(name,"",-1);
 }

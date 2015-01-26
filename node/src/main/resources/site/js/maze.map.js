@@ -35,8 +35,33 @@ Maze.prototype.getSectionKeyByObj = function(obj) {
 Maze.prototype.serversStepIt = function() {
 	var newSubscribedSections = {};
 	
+		
+		
+	if (!this.accessToken) {
+		if (this.accessTokenSent)
+			return;
+			
+		var sessionId = this.readCookie("sessionid");
+		if (!sessionId) {
+			window.location.href = "/";
+			return;
+		}
+			
+		var msg = {
+			cmd : "getaccesstoken",
+			sessionId : sessionId
+		};
+		var url = this.objectGetServerUrl();
+		var server = this.getServer(url);
+		if (server.send(msg)) {
+			this.accessTokenSent = this.timeNow;
+		}
+		return;
+	}
+	
 	if (!this.camera || !this.camera.follow)
 		return;
+	
 		
 	if (!this.camera.follow.loaded) {
 		if (this.camera.follow.loadSent)
@@ -54,9 +79,6 @@ Maze.prototype.serversStepIt = function() {
 			this.camera.follow.loadSent = this.timeNow;
 		}
 		return;
-	
-	
-	
 	}
 		
 		
@@ -192,6 +214,7 @@ Maze.Server = function(maze, url) {
 }
 
 Maze.Server.prototype.send = function(omsg) {
+	omsg.accessToken = this.maze.accessToken;
 	var msg = JSON.stringify(omsg);
 	console.log("SENT TO SERVER");
 	console.log(msg);
@@ -220,6 +243,21 @@ Maze.Server.prototype.processResponse = function(data) {
 		alert("Server : " + data.error);
 		return;
 		
+	}
+	
+	if (data.cmd == "accesstoken") {
+		this.maze.hero = new Maze.Obj.Hero(this.maze);
+		this.maze.hero.playerId = data.playerId;
+		
+		this.maze.objs[this.maze.hero.playerId] = this.maze.hero;
+		this.maze.accessToken = data.accessToken;
+		this.maze.playerRecord.playerId = data.playerId;
+		
+		this.maze.heroPlaced = false;
+		this.maze.camera.follow = this.maze.hero;
+		
+		return;
+	
 	}
 	
 	if (data.cmd != "init")

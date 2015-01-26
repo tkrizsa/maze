@@ -34,13 +34,14 @@ public class PlayerServer extends MazeServer {
 	
 
 	public Player getPlayer(String playerId) {
-		Player player = players.get(playerId);
-		if (player== null) {
-			player = new Player(playerId);
-			players.put(playerId, player);
+		return players.get(playerId);
+		// Player player = players.get(playerId);
+		// if (player== null) {
+			// player = new Player(playerId);
+			// players.put(playerId, player);
 		
-		}
-		return player;
+		// }
+		// return player;
 	}
 	
 	public GameObject createObjectByClassName(String className) {
@@ -66,6 +67,7 @@ public class PlayerServer extends MazeServer {
 	
 	@Override
 	public void start() {
+		super.start();
 		final Logger logger = container.logger();
 		final EventBus eventBus = vertx.eventBus();
 		final JsonObject appConfig = container.config();
@@ -74,6 +76,7 @@ public class PlayerServer extends MazeServer {
 		serverId = appConfig.getString("serverId");
 		
 		logger.info("player server started ...." + serverId);
+		loadPlayers();
 		loadObjects();
 		
 		
@@ -109,37 +112,54 @@ public class PlayerServer extends MazeServer {
 		});
 		
 		
-		eventBus.registerHandler("queryobjects", new Handler<Message<JsonArray>>() {
-			@Override
-			public void handle(Message<JsonArray> msg) {
-				logger.info("QUERYOBJECTS");
-				logger.info(msg.body().toString());
-				// JsonArray jresp = new JsonArray();
-				// JsonArray jkeys = msg.body();
-				// for (int i = 0; i < jkeys.size(); i++) {
-					// String key = (String)jkeys.get(i);
-					// GameObject obj = objects.get(key);
-					// if (obj != null) {
-						// System.out.println("* found : " + key);
-						// jresp.add(obj.getData());
-					
-					// } else {
-						// System.out.println("* not found : " + key);
-					// }
-				
-				// }
-			
-				// eventBus.publish("objectdata", jresp);
-			}
-		});
 
-		eventBus.registerHandler("getplayer", new Handler<Message<JsonObject>>() {
+
+		eventBus.registerHandler("player.create#" + serverId, new Handler<Message<JsonObject>>() {
 			@Override
-			public void handle(Message<JsonObject> msg) {
-				logger.info("GETPLAYER");
-				// Player player = getPlayer(msg.body().getString("playerId"));
-			
-				// msg.reply(player.getData());
+			public void handle(final Message<JsonObject> origmsg) {
+				logger.info("PLAYER.CREATE");
+				final String playerId = origmsg.body().getString("playerId");
+				final String loginId = origmsg.body().getString("loginId");
+				
+				if (playerId == null || "".equals(playerId)) {
+					JsonObject jerr = new JsonObject();
+					jerr.putString("status", "error");
+					jerr.putString("message", "player.create : missing playerId");
+					origmsg.reply(jerr);
+				}
+				if (loginId == null || "".equals(loginId)) {
+					JsonObject jerr = new JsonObject();
+					jerr.putString("status", "error");
+					jerr.putString("message", "player.create : missing loginId");
+					origmsg.reply(jerr);
+				}
+				
+				loadLogin(loginId, new Handler<JsonObject>() {
+					@Override
+					public void handle(JsonObject jlogin) {
+						if (jlogin == null) {
+							JsonObject jerr = new JsonObject();
+							jerr.putString("status", "error");
+							jerr.putString("message", "loginid not found.");
+							origmsg.reply(jerr);
+						
+						}
+					
+						final Player player = new Player(loginId, playerId);
+						player.playerName = jlogin.getString("username");
+						savePlayer(player, new Handler<JsonObject> () {
+							@Override
+							public void handle(JsonObject jresp) {
+								if ("ok".equals(jresp.getString("status"))) {
+									players.put(player.playerId, player);
+								}
+								origmsg.reply(jresp);
+							}
+						});
+					
+					}
+				
+				});
 			}
 		});
 
@@ -281,4 +301,90 @@ public class PlayerServer extends MazeServer {
 		});
 	}
 	
+	public void loadPlayers() {
+		final EventBus eventBus = vertx.eventBus();
+		
+		JsonObject req = new JsonObject();
+		req.putString("action", "raw");
+		req.putString("statement", "SELECT * FROM maze.players");
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
+			public void handle(Message<JsonArray> message) {
+				System.out.println("Cassandra reply loadPlayers() " + message.body());
+				
+				if (!(message.body() instanceof JsonArray))
+					return;
+				
+				for (int i = 0; i < message.body().size(); i++) {
+					JsonObject jrow = message.body().get(i);
+					
+					String loginId = jrow.getString("loginid");
+					String playerId = jrow.getString("playerid");
+					//JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
+					Player obj = new Player(loginId, playerId);
+					obj.playerName = jrow.getString("playername");
+					players.put(playerId, obj);
+					
+					// System.out.println("------------loaded object---------------");
+					// System.out.println(objectKey);
+					// System.out.println(obj.getObjectId());
+					// System.out.println(obj.getData().toString());
+					// System.out.println("------------");
+					
+				} 
+			}
+		});
+	}
+
+	public void loadLogin(final String loginId, final Handler<JsonObject> callHandler)  {
+		final EventBus eventBus = vertx.eventBus();
+
+		JsonObject req = new JsonObject();
+		req.putString("action", "prepared");
+		req.putString("statement", "SELECT * FROM maze.logins WHERE loginId = ?");
+		JsonArray v0 = new JsonArray();
+		v0.addString(loginId);
+		JsonArray values = new JsonArray();
+		values.addArray(v0);
+		req.putArray("values", values);	
+	
+		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
+			public void handle(Message<JsonArray> message) {
+				System.out.println("Cassandra reply loadLogin() " + message.body());
+				
+				if (!(message.body() instanceof JsonArray)) {
+					callHandler.handle(null);
+				}
+				if (message.body().size() != 1) {
+					callHandler.handle(null);
+				}
+				callHandler.handle((JsonObject)message.body().get(0));
+			}
+		});
+	
+	}
+	
+	public void savePlayer(final Player player, final Handler<JsonObject> callHandler) {
+		final EventBus eventBus = vertx.eventBus();
+		
+		JsonObject req = new JsonObject();
+		req.putString("action", "prepared");
+		req.putString("statement", "INSERT INTO maze.players (playerid, loginid_worldid, playername) VALUES (?, ?, ?)");
+		JsonArray v0 = new JsonArray();
+		v0.addString(player.playerId);
+		v0.addString(player.loginId + "#" + getWorldId());
+		v0.addString(player.playerName);
+		JsonArray values = new JsonArray();
+		values.addArray(v0);
+		req.putArray("values", values);
+		
+		
+		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
+			public void handle(Message<JsonObject> message) {	
+				System.out.println("Cassandra reply to player save :  " + message.body());
+				callHandler.handle(message.body());
+			}
+		});
+	}	
 }

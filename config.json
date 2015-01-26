@@ -8,20 +8,24 @@
 	}],
 
 	"mapservers" : [{
-		"serverId"	: "map00"
+		"serverId"	: "map00",
+		"worldId"	: "2015-dev-001"
 	},
 	{
-		"serverId"	: "map01"
+		"serverId"	: "map01",
+		"worldId"	: "2015-dev-001"
 	}],
 	
 	"objectservers" : [{
-		"serverId"	: "obj00"
+		"serverId"	: "obj00",
+		"worldId"	: "2015-dev-001"
 	}],
 	
 	"clientservers" : [{
 		"serverId"	: "cli00",
 		"host"		: "0.0.0.0",
-		"port"		: 8091
+		"port"		: 8091,
+		"worldId"	: "2015-dev-001"
 	}],
 	
 	"cassandra" : {

@@ -59,18 +59,33 @@
 	</div>
 </div>
 
-<div class="grey-row" id="headings">
+<div class="grey-row">
 	<div class="container row-2 font-light">
 		<div class="clear row mobile-row tablet-text-left mobile-text-left">
-			<h2 class="h3 font-light">Log in please!</h2>
-			<form onsubmit="return false;">
-				<label for="name">Your email address:</label>
-				<input type="text" id="name" cols="60" placeholder="Your email address...">
-				<label for="name">Your password:</label>
-				<input type="password" id="name" cols="60" placeholder="password...">
+		
+			<div class="maze-main-page" id="maze-login-form" style="display:none;">
+		
+				<h2 class="h3 font-light">Log in please!</h2>
+				<form onsubmit="return false;">
+					<label for="name">Your email address:</label>
+					<input type="text" id="maze-login-form-email" cols="60" placeholder="Your email address..." value="tkrizsa">
+					<label for="name">Your password:</label>
+					<input type="password" id="maze-login-form-password" cols="60" placeholder="password..."  value="qwert">
+					
+					<input type="submit" id="maze-login-form-button" value="Login">
+				</form>
 				
-				<input type="submit" value="Login">
-			</form>
+			</div>
+
+			<div class="maze-main-page" id="maze-welcome" style="display:none;">
+				<h2 class="h3 font-light" id="maze-welcome-welcome"></h2>
+				<br/>
+				<br/>
+				<input type="submit" id="maze-logout-button" value="Logout">
+			</div>
+			
+			
+			
 		</div>
 	</div>
 </div>
@@ -82,6 +97,112 @@
 <script src="http://cdn.sockjs.org/sockjs-0.3.4.min.js"></script>
 <script type="text/javascript" charset="utf-8">
 
+
+	$(function() {
+		var userName = "";
+		var sock = new SockJS("http://localhost:8091/mazesocket");
+		var sessionId = readCookie("sessionid");
+		if (!sessionId) {
+			$('#maze-login-form').show();
+		} 
+		
+		sock.onopen = function() {
+			if (sessionId) {
+				var msg = {
+					cmd : "sessionget",
+					sessionId : sessionId
+				};
+				sock.send(JSON.stringify(msg));
+			}
+		}
+		
+		sock.onmessage = function(e) {
+			//console.log('message', e.data);
+			//$("#log").append(e.data);
+			var data;
+			try {
+				data = JSON.parse(e.data);
+			} catch (ex) {
+				alert(ex);
+				return;
+			}
+			if (data.error) {
+				alert(data.error);
+				return;
+			}
+			
+			
+			if (data.sessionId) {
+				sessionId = data.sessionId;
+				createCookie("sessionid", sessionId);
+				userName = data.userName;
+				
+				$("#maze-welcome-welcome").html("Hello " + userName + "!");
+				$(".maze-main-page").hide();
+				$("#maze-welcome").fadeIn();
+			} else if (data.logout) {
+				eraseCookie("sessionid");
+				userName = "";
+				$(".maze-main-page").hide();
+				$("#maze-login-form").fadeIn();
+			}
+			
+			//thisServer.processResponse(data);
+		};		
+		
+	
+	
+		$("#maze-login-form-button").click(function(e) {
+			var email = $("#maze-login-form-email").val();
+			var password = $("#maze-login-form-password").val();
+			var msg = {
+				cmd : "login",
+				email : email,
+				password : password
+			};
+			sock.send(JSON.stringify(msg));
+		
+		});
+	
+		$("#maze-logout-button").click(function(e) {
+			var msg = {
+				cmd : "logout",
+				sessionId : sessionId
+			};
+			sock.send(JSON.stringify(msg));
+		
+		});
+	
+	});
+	
+
+
+
+
+function createCookie(name,value,days) {
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime()+(days*24*60*60*1000));
+        var expires = "; expires="+date.toGMTString();
+    }
+    else var expires = "";
+    document.cookie = name+"="+value+expires+"; path=/";
+}
+
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    createCookie(name,"",-1);
+}
 </script>
 </body>
 </html>

@@ -3,20 +3,23 @@
 CREATE TABLE sections (key text primary key, items text);
 
 CREATE TABLE plains (plainid text primary key, info map<text,text>);
-
 INSERT INTO plains (plainId, info) VALUES ('earth', {'left' : '-2000', 'right' : '2000', 'top' : '-2000', 'bottom':'2000', 'defaultFloor' : 'GrassFloor'});
-
 
 CREATE TABLE objects (objectKey text primary key, className text, objectData text);
 
 
 
-CREATE TABLE login (loginid text primary key, email text, password text);
+CREATE TABLE logins (loginid text primary key, username text, email text, password text);
+CREATE INDEX logins_email_ix ON logins (email);
+INSERT INTO logins (loginid, username, email, password) values ('1233', 'Kristof', 'tkrizsa',  'qwert');
+INSERT INTO logins (loginid, username, email, password) values ('1234', 'Nora', 'tkrizsa2',  'qwert');
+INSERT INTO logins (loginid, username, email, password) values ('1235', 'Dora', 'tkrizsa3',  'qwert');
 
-CREATE INDEX login_email_ix ON login (email);
 
-CREATE TABLE player (playerid text primary key, loginid text, playername text, avatar map<text,text>);
+CREATE TABLE sessions (sessionid text primary key, loginid text);
 
-CREATE INDEX player_loginid_ix ON player (loginid);
+
+CREATE TABLE players (playerid text primary key, loginid_worldid text, playername text, avatar map<text,text>);
+CREATE INDEX players_loginid_worldid_ix ON players (loginid_worldid);
 
 

@@ -3,15 +3,35 @@ package hu.tkrizsa.maze;
 import org.vertx.java.platform.Verticle;
 import org.vertx.java.core.eventbus.EventBus;
 import hu.tkrizsa.maze.util.SimpleFlake;
+import hu.tkrizsa.maze.util.IdGenerator;
+import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.json.JsonArray;
 
 
 public class MazeServer extends Verticle {
 
 	public int SECTION_SIZE = 16;
 	private final SimpleFlake keygen = new SimpleFlake();
+	private final IdGenerator md5gen = new IdGenerator();
+	private String worldId;
+	
+	
+	@Override
+	public void start() {
+		final JsonObject appConfig = container.config();
+		worldId = appConfig.getString("worldId");
+		if (worldId == null || "".equals(worldId)) {
+			System.err.println("MISSING WORLDID!!!!");
+		}
+	}
+	
 	
 	public EventBus getEventBus() {
 		return vertx.eventBus();		
+	}
+	
+	public String getWorldId() {
+		return worldId;
 	}
 
 	public String createSectionKey(String plainId, int x, int y) {
@@ -46,12 +66,16 @@ public class MazeServer extends Verticle {
 		}
 	}
 
-	public String getObjectServerId(String objectId) throws Exception {
+	public String getObjectServerId(String objectId) {
 		return "obj00";
 	}
 	
 	public String generateId() {
 		return new Long(keygen.generate()).toString();
+	}
+	
+	public String generateMd5Id() {
+		return md5gen.generateId(32);
 	}
 	
 

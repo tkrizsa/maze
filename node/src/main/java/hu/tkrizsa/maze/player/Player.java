@@ -5,21 +5,18 @@ import org.vertx.java.core.json.JsonArray;
 
 
 public class Player {
-	public static int pc = 0;
 	public String playerId;
+	public String loginId;
 	public String playerName;
 	public String headColor;
 	
-	public Player(String playerId) {
+	
+	public Player(String loginId, String playerId) {
+		this.loginId = loginId;
 		this.playerId = playerId;
-		if (pc == 0) {
-			this.playerName = "tkrizsa";
-			this.headColor = "#324684"; //blue
-		} else {
-			this.playerName = "user" + pc;
-			this.headColor = "#952620"; //red
-		}
-		pc++;
+		this.playerName = "";
+		this.headColor = "#324684"; //blue
+		//this.headColor = "#952620"; //red
 		
 	}
 	

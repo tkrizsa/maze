@@ -37,7 +37,7 @@ public class MapServer extends MazeServer {
 
 	@Override
 	public void start() {
-		
+		super.start();
 		final MapServer thisServer = this;
 		
 		final Logger logger = container.logger();

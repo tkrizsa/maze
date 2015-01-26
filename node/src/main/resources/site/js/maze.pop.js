@@ -208,10 +208,10 @@ Maze.Pop.Main = function(maze) {
 		style : 'transparent'
 	});
 	
-	this.poseEditor = new Maze.Pop.PoseEditor(this.maze, this, this.maze.hero, this.maze.hero.animations.step);	
-	this.drawMenu = new Maze.Pop.DrawMenu(this.maze, this);	
+	//this.poseEditor = new Maze.Pop.PoseEditor(this.maze, this, this.maze.hero, this.maze.hero.animations.step);	
+	//this.poseEditor.hidden = true;
 	
-	this.poseEditor.hidden = true;
+	this.drawMenu = new Maze.Pop.DrawMenu(this.maze, this);	
 	this.drawMenu.hidden = true;
 	
 	
