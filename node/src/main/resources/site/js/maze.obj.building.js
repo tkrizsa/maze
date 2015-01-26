@@ -27,7 +27,12 @@ Maze.Obj.Building.buildingDrawIt = function(cam, left, top) {
 }
 
 Maze.Obj.Building.setData = function(jdata) {
-	this.hello = "leo";
+	this.tileX = jdata.tileX;
+	this.tileY = jdata.tileY;
+	this.tileWidth = jdata.tileWidth;
+	this.tileHeight = jdata.tileHeight;
+	this.tileOffX = jdata.tileOffX;
+	this.tileOffY = jdata.tileOffY;
 }
 
 Maze.Obj.Building.placeTo = function(plain, tileX, tileY) {

@@ -43,7 +43,8 @@ Maze.Obj.Hero = function(maze) {
 }
 
 Maze.Obj.Hero.prototype.setData = function(jdata) {
-	this.playerName = jdata.playerName;
+	this.playerName 	= jdata.playerName;
+	this.headColor 		= jdata.headColor;
 	this.loaded = true;
 }
 

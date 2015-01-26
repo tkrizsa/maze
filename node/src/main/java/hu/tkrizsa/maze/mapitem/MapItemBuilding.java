@@ -27,6 +27,8 @@ public class MapItemBuilding extends MapItemUniq {
 		setData(jdata);
 		
 		System.out.println("=========drawstart");
+		System.out.println("=========tileOffX:" + tileOffX);
+		System.out.println("=========tileOffY:" + tileOffY);
 		
 		SectionMap secs = new SectionMap();
 		
@@ -97,8 +99,8 @@ public class MapItemBuilding extends MapItemUniq {
 		tileY 			= jdata.getInteger("tileY");
 		tileWidth 		= jdata.getInteger("tileWidth");
 		tileHeight 		= jdata.getInteger("tileHeight");
-		tileOffY 		= jdata.getInteger("tileOffX");
-		tileOffX 		= jdata.getInteger("tileOffY");
+		tileOffX 		= jdata.getInteger("tileOffX");
+		tileOffY 		= jdata.getInteger("tileOffY");
 	}
 
 

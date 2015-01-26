@@ -449,6 +449,13 @@ Maze.Camera.prototype.render = function() {
 							tileY : y + this.centerTileY 
 						});
 					}
+					
+					if (item.obj.is("building")) {
+						ctx.beginPath();
+						ctx.rect(left,	top,	this.TILE_WIDTH,	this.TILE_HEIGHT);
+						ctx.fillStyle = 'rgba(180,100,80,0.4)';
+						ctx.fill();
+					}
 				} else {
 					item.obj.trigger('drawIt', this, left, top);
 					
@@ -513,15 +520,12 @@ Maze.Camera.prototype.render = function() {
 	// SELECTION
 	if (this.mouseHover.kind == 'tile') {
 		ctx.beginPath();
-		
 		ctx.rect(
 			canvasMidX + (this.mouseHover.tileX - this.centerTileX) * this.TILE_WIDTH - this.centerOffsetX,
 			canvasMidY + (this.mouseHover.tileY - this.centerTileY) * this.TILE_HEIGHT - this.centerOffsetY,
 			this.TILE_WIDTH,
 			this.TILE_HEIGHT
 			);
-			
-		ctx.lineWidth="1";
 		ctx.fillStyle = 'rgba(0,0,0,0.2)';
 		ctx.fill();
 	}	
@@ -562,7 +566,25 @@ Maze.Camera.prototype.render = function() {
 		);
 	}
 	
-
+	var info = "";
+	if (this.mouseHover.kind == 'tile') {
+		info = this.mouseHover.tileX + " x " + this.mouseHover.tileY;
+	} else if (this.mouseHover.kind == 'selectable') {
+		info = this.mouseHover.obj.className;
+		info += ' (' + this.mouseHover.obj.tileX + " x " + this.mouseHover.obj.tileY + ')';
+		if (typeof this.mouseHover.obj.tileWidth != 'undefined') {
+			info += ' (' + this.mouseHover.obj.tileWidth + " x " + this.mouseHover.obj.tileHeight + ')';
+		}
+	}
+	
+	
+	ctx.font = "bold 14px Arial";
+	ctx.fillStyle = 'rgba(25,25,25,1.0)';
+	ctx.lineWidth = 1.8;
+	ctx.strokeStyle = 'rgba(250,250,200,1.0)';	
+	ctx.strokeText(info, this.canvasWidth / 2, this.canvasHeight - 20);
+	ctx.fillText(info, this.canvasWidth / 2, this.canvasHeight - 20);
+	
 
 	// ===== FIGHT =======
 	// if (this.follow && this.follow.inFight) {

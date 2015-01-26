@@ -368,8 +368,15 @@ Maze.Obj.Animated.animatedDrawIt = function(cam, left, top) {
 		if (part.kind == 'circle') {
 			ctx.beginPath();
 			ctx.arc(ptsp[part.p0].x, ptsp[part.p0].y, part.rad * zoom, 0, 2 * Math.PI, false);
-			ctx.fillStyle = part.fillStyle;
+			if (typeof part.fillStyle == 'string' && part.fillStyle.indexOf('@') === 0) {
+				ctx.fillStyle = this[part.fillStyle.substr(1)];
+			} else {
+				ctx.fillStyle = part.fillStyle;
+			}
 			ctx.fill();
+			ctx.lineWidth = 1.0;
+			ctx.strokeStyle = this.lineColor;
+			ctx.stroke();
 			if (this.zanal) {
 				ctx.beginPath();
 				ctx.arc(ptsp[part.p0].z + zz, ptsp[part.p0].y, part.rad * zoom, 0, 2 * Math.PI, false);
@@ -532,7 +539,7 @@ Maze.Obj.Animated.init = function() {
 	
 	this.addLine(1,16); // neck
 	
-	this.addCircle(16, this.headRad, this.headColor);
+	this.addCircle(16, this.headRad, '@headColor');
 
 	
 	// this.addLine(15,17); // sword

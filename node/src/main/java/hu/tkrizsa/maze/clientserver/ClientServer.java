@@ -172,7 +172,7 @@ public class ClientServer extends MazeServer {
 											forward.putString("clientServerAddress", "client#" + clientServerId);
 											forwards.put(serverId, forward);
 										}
-										JsonArray fobjectIds = forward.getArray("fobjectIds");
+										JsonArray fobjectIds = forward.getArray("getObjects");
 										if (fobjectIds == null) {
 											fobjectIds = new JsonArray();
 											forward.putArray("getObjects", fobjectIds);
