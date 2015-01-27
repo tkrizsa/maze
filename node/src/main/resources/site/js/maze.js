@@ -445,12 +445,12 @@ Maze.Camera.prototype.render = function() {
 						});
 					}
 					
-					if (item.obj.is("building")) {
-						ctx.beginPath();
-						ctx.rect(left,	top,	this.TILE_WIDTH,	this.TILE_HEIGHT);
-						ctx.fillStyle = 'rgba(180,100,80,0.4)';
-						ctx.fill();
-					}
+					// if (item.obj.is("building")) {
+						// ctx.beginPath();
+						// ctx.rect(left,	top,	this.TILE_WIDTH,	this.TILE_HEIGHT);
+						// ctx.fillStyle = 'rgba(180,100,80,0.4)';
+						// ctx.fill();
+					// }
 				} else {
 					item.obj.trigger('drawIt', this, left, top);
 					

@@ -1,6 +1,6 @@
 Maze.Obj.Blur = function(obj) {
 	Maze.Obj.extend(this);
-	this.ancestors.Blur = true;
+	this.ancestors.blur = true;
 	this.className = 'Blur';
 	this.mapPart = false;
 

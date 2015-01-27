@@ -61,15 +61,20 @@ Maze.Obj.Selectable.extend = function(obj, maze) {
 
 Maze.Obj.Selectable.selectableDrawIt = function(cam, left, top) {
 	if (this.mouseHover || this.mouseActive) {
-		cam.ctx.beginPath();
-		cam.ctx.arc(left + cam.TILE_WIDTH / 2, top + cam.TILE_HEIGHT / 2, cam.TILE_WIDTH / 2, 0, 2 * Math.PI, false)		
 		if (this.mouseActive) {
 			cam.ctx.fillStyle = 'rgba(255,80,80,0.85)';
 			this.mouseActive = false;
 		} else {
 			cam.ctx.fillStyle = 'rgba(200,200,80,0.6)';
 		}
-		cam.ctx.fill();
+		if (this.tileWidth>1 || this.tileHeight>1) {
+			cam.ctx.fillRect(left + cam.TILE_WIDTH * this.tileOffX, top + cam.TILE_HEIGHT * this.tileOffY, cam.TILE_WIDTH * this.tileWidth, cam.TILE_HEIGHT * this.tileHeight);
+		} else {
+			cam.ctx.beginPath();
+			cam.ctx.arc(left + cam.TILE_WIDTH / 2, top + cam.TILE_HEIGHT / 2, cam.TILE_WIDTH / 2, 0, 2 * Math.PI, false)		
+			cam.ctx.fill();
+		}
+		
 	}
 }
 
@@ -310,6 +315,7 @@ Maze.Obj.SwampWaterFloor = function(i) {
 	this.ancestors.Floor = true;
 	this.ancestors.SwampWaterFloor = true;
 	this.className = 'SwampWaterFloor';
+	this.blocking = true;
 };
 
 // ===================================== PLAYBACKFLOOR ======================================

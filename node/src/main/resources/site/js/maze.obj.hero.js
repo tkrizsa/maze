@@ -53,7 +53,11 @@ Maze.Obj.Hero.prototype.heroDrawIt = function(cam, left, top) {
 	cam.ctx.font = "bold " + fos + "px Arial";
 	cam.ctx.fillStyle = 'rgba(25,25,25,1.0)';
 	cam.ctx.lineWidth = 1 + fos / 10;
-	cam.ctx.strokeStyle = 'rgba(250,250,200,1.0)';	
+	if (this.maze.hero == this) {
+		cam.ctx.strokeStyle = 'rgba(250,250,200,1.0)';	
+	} else {
+		cam.ctx.strokeStyle = 'rgba(250,180,250,1.0)';	
+	}
 	cam.ctx.strokeText( this.playerName, left, top - cam.TILE_HEIGHT);
 	cam.ctx.fillText( this.playerName, left, top - cam.TILE_HEIGHT);
 
