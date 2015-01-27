@@ -1,6 +1,7 @@
 package hu.tkrizsa.maze.mapserver;
 
 import org.vertx.java.core.AsyncResult;
+import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.logging.Logger;
@@ -16,6 +17,7 @@ import java.util.Random;
 
 import hu.tkrizsa.maze.mapitem.*;
 import hu.tkrizsa.maze.MazeServer;
+import hu.tkrizsa.maze.util.DBHandler;
 
 public class MapServer extends MazeServer {
 
@@ -493,88 +495,47 @@ public class MapServer extends MazeServer {
 	
 	/* ======================================= CASSANDRA ============================================= */
 	public void savePlain(Plain plain) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.plains (plainid, info) VALUES (?, ?)");
-		JsonArray v0 = new JsonArray();
-		v0.addString(plain.getPlainId());
-		v0.addObject(plain.getData());
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {	
-				System.out.println("Cassandra reply " + message.body());
-			}
-		});
+		dbQuery("INSERT INTO maze.plains (plainid, info) VALUES (?, ?)")
+		.addString(plain.getPlainId())
+		.addObject(plain.getData())
+		.run();
 	}
 	
 	public void saveSection(Section section) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.sections (key, map, plainId) VALUES (?, ?, ?)");
-		JsonArray v0 = new JsonArray();
-		v0.addString(section.getKey());
-		v0.addString(section.getJson(true, false).toString());
-		v0.addString(section.plain.getPlainId());
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {	
-				System.out.println("Cassandra reply " + message.body());
-			}
-		});
+		dbQuery("INSERT INTO maze.sections (key, map, plainId) VALUES (?, ?, ?)")
+		.addString(section.getKey())
+		.addString(section.getJson(true, false).toString())
+		.addString(section.plain.getPlainId())
+		.run();
 	}
 	
 	public void loadSection(final Section section) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT key, map FROM maze.sections WHERE key = ?");
-		JsonArray v0 = new JsonArray();
-		v0.addString(section.getKey());
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					JsonObject row0 = message.body().get(0);
-					JsonObject map = new JsonObject(row0.getString("map"));
-					section.loaded(map);
-				} else {
-					section.notExists();
-				}
-				
+		dbQuery("SELECT key, map FROM maze.sections WHERE key = ?")
+		.addString(section.getKey())
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				JsonObject map = new JsonObject(row.getString("map"));
+				section.loaded(map);
+			}
+			public void notExists() {
+				section.notExists();
 			}
 		});
 	}
 	
 	public void loadPlains() {
-		JsonObject req = new JsonObject();
-		req.putString("action", "raw");
-		req.putString("statement", "SELECT * FROM maze.plains");
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				for (int i = 0; i < message.body().size(); i++) {
-					JsonObject jrow = message.body().get(i);
-					String plainId = jrow.getString("plainid");
-					JsonObject jinfo = jrow.getObject("info");
-					Plain newPlain = new Plain(plainId);
-					newPlain.setData(jinfo);
-					plains.put(plainId, newPlain);
-				} 
+		dbQuery("SELECT * FROM maze.plains")
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				System.out.println("PLAIN LOADED");
+				System.out.println(row);
+				String plainId = row.getString("plainid");
+				JsonObject jinfo = row.getObject("info");
+				Plain newPlain = new Plain(plainId);
+				newPlain.setData(jinfo);
+				plains.put(plainId, newPlain);
 			}
 		});
 	}
+	
 }

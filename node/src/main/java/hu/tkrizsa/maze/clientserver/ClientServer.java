@@ -19,6 +19,7 @@ import org.vertx.java.core.json.JsonArray;
 import java.util.Map;
 import java.util.HashMap;
 
+import hu.tkrizsa.maze.util.DBHandler;
 import hu.tkrizsa.maze.util.SmallMap;
 import hu.tkrizsa.maze.MazeServer;
 
@@ -36,6 +37,13 @@ public class ClientServer extends MazeServer {
 		public SocketClient(SockJSSocket sock) {
 			this.sock = sock;
 		}
+
+		public void write(JsonObject jobj) {
+			Buffer buff = new Buffer();
+			buff.appendString(jobj.toString());
+			sock.write(buff);					
+		}
+		
 	}
 	
 
@@ -143,12 +151,6 @@ public class ClientServer extends MazeServer {
 							System.out.println("** current playerid : " + socketclient.playerId);
 							if (socketclient.playerId == null) {
 								throw new Exception("No playerid in socketclient.");
-								// socketclient.playerId = msg.getString("playerId");
-								// if (socketclient.playerId == null || "".equals(socketclient.playerId)) 
-									// throw new Exception("Missing playerid");
-				
-								// clients.put(socketclient.playerId, socketclient);
-								// System.out.println("** playerid saved : " + socketclient.playerId);
 							}
 
 
@@ -320,85 +322,51 @@ public class ClientServer extends MazeServer {
 
 	
 	public void handleLogin(final SocketClient socketclient, final String email, final String password) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT loginid, email, password FROM maze.logins WHERE email = ? ");
-		JsonArray v0 = new JsonArray();
-		v0.addString(email);
-		//v0.addString(password);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					JsonObject row0 = message.body().get(0);
-					
-					if (!(password.equals(row0.getString("password")))) {
-						clientError(socketclient, "Invalid email or password.");
-						return;
-					}
-					createSession(socketclient, row0.getString("loginid"));
-				} else {
-					clientError(socketclient, "Invalid email or password! " + email);
+		dbQuery("SELECT loginid, email, password FROM maze.logins WHERE email = ? ")
+		.addString(email)
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				if (!(password.equals(row.getString("password")))) {
+					clientError(socketclient, "Invalid email or password.");
+					return;
 				}
-				
+				createSession(socketclient, row.getString("loginid"));
 			}
+			public void notExists() {
+				clientError(socketclient, "Invalid email or password! ");
+			}
+		
 		});
+	
 	}
 	
 	public void createSession(final SocketClient socketclient, final String loginId) {
 		final String sessionId = generateMd5Id();
-	
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.sessions (sessionid, loginid) values (?,?) IF NOT EXISTS USING TTL 10000");
-		JsonArray v0 = new JsonArray();
-		v0.addString(sessionId);
-		v0.addString(loginId);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				String status = message.body().getString("status");
-				if (status.equals("ok")) {
-				
-					sendSessionByLoginId(socketclient, sessionId, loginId);
-				} else {
-					clientError(socketclient, "saving session : " + message.body().getString("message"));
-				}
-				
+		dbQuery("INSERT INTO maze.sessions (sessionid, loginid) values (?,?) IF NOT EXISTS USING TTL 10000")
+		.addString(sessionId)
+		.addString(loginId)
+		.run(new DBHandler(false) {
+			public void success() {
+				sendSessionByLoginId(socketclient, sessionId, loginId);
+			}
+			public void fail(String error) {
+				clientError(socketclient, "saving session : " + error);
 			}
 		});
 	}
 	
 	public void sendSession(final SocketClient socketclient, final String sessionId) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT loginId FROM maze.sessions WHERE sessionid = ? ");
-		JsonArray v0 = new JsonArray();
-		v0.addString(sessionId);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					JsonObject row0 = message.body().get(0);
-					sendSessionByLoginId(socketclient, sessionId, row0.getString("loginid"));								
-				} else {
-					clientError(socketclient, "Invalid session id! ");
-				}
-				
+		dbQuery("SELECT loginId FROM maze.sessions WHERE sessionid = ? ")
+		.addString(sessionId)
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				sendSessionByLoginId(socketclient, sessionId, row.getString("loginid"));								
+			}
+			public void notExists() {
+				clientError(socketclient, "Invalid session id! ", 100);
+			}
+			public void fail(String error) {
+				clientError(socketclient, error);
 			}
 		});
 	}
@@ -406,124 +374,75 @@ public class ClientServer extends MazeServer {
 	
 	//call only when session is checked!!
 	public void sendSessionByLoginId(final SocketClient socketclient, final String sessionId, final String loginId) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT username FROM maze.logins WHERE loginId = ? ");
-		JsonArray v0 = new JsonArray();
-		v0.addString(loginId);
-		//v0.addString(password);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					JsonObject row0 = message.body().get(0);
-					
-					JsonObject jresp = new JsonObject();
-					jresp.putString("sessionId", sessionId);
-					jresp.putString("userName", row0.getString("username"));
-					
-					Buffer buff = new Buffer();
-					buff.appendString(jresp.toString());
-					socketclient.sock.write(buff);					
-				} else {
-					clientError(socketclient, "Invalid login id! ");
-				}
-				
+		dbQuery("SELECT username FROM maze.logins WHERE loginId = ? ")
+		.addString(loginId)
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				JsonObject jresp = new JsonObject();
+				jresp.putString("sessionId", sessionId);
+				jresp.putString("userName", row.getString("username"));
+				socketclient.write(jresp);					
+			}
+			public void notExists() {
+				clientError(socketclient, "Invalid login id! ");
+			}
+			public void fail(String error) {
+				clientError(socketclient, error);
 			}
 		});
 	}
 	
 	public void logout(final SocketClient socketclient, final String sessionId) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "DELETE FROM maze.sessions WHERE sessionid = ?");
-		JsonArray v0 = new JsonArray();
-		v0.addString(sessionId);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				String status = message.body().getString("status");
-				if (status.equals("ok")) {
-					JsonObject jresp = new JsonObject();
-					jresp.putBoolean("logout", true);
-					
-					Buffer buff = new Buffer();
-					buff.appendString(jresp.toString());
-					socketclient.sock.write(buff);					
-				} else {
-					clientError(socketclient, "error delete session : " + message.body().getString("message"));
-				}
-				
+		dbQuery("DELETE FROM maze.sessions WHERE sessionid = ?")
+		.addString(sessionId)
+		.run(new DBHandler(false) {
+			public void success() {
+				JsonObject jresp = new JsonObject();
+				jresp.putBoolean("logout", true);
+				socketclient.write(jresp);					
+			}
+			public void fail(String error) {
+				clientError(socketclient, error);
 			}
 		});
 	}
 	
 	public void getAccesstoken(final SocketClient socketclient, final String sessionId) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT loginId FROM maze.sessions WHERE sessionid = ? ");
-		JsonArray v0 = new JsonArray();
-		v0.addString(sessionId);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					JsonObject row0 = message.body().get(0);
-					getAccesstoken2(socketclient, row0.getString("loginid"));								
-				} else {
-					clientError(socketclient, "Invalid session id! ");
-				}
-				
+		dbQuery("SELECT loginId FROM maze.sessions WHERE sessionid = ? ")
+		.addString(sessionId)
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				getAccesstoken2(socketclient, row.getString("loginid"));								
+			}
+			public void notExists() {
+				clientError(socketclient, "Invalid session id! ", 100);
+			}
+			public void fail(String error) {
+				clientError(socketclient, error);
 			}
 		});
 	}
 	
 	public void getAccesstoken2(final SocketClient socketclient, final String loginId) {
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT playerid FROM maze.players WHERE loginid_worldid = ? ");
-		JsonArray v0 = new JsonArray();
-		v0.addString(loginId + "#" + getWorldId());
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		getEventBus().send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				//System.out.println("Cassandra reply " + message.body());
-				if (message.body().size()>0) {
-					// player found ...
-					JsonObject row0 = message.body().get(0);
-					socketclient.accessToken = generateMd5Id();
-					socketclient.playerId = row0.getString("playerid");
-					clients.put(socketclient.playerId, socketclient);
-				
-					JsonObject jresp = new JsonObject();
-					jresp.putString("cmd", "accesstoken");
-					jresp.putString("playerId", socketclient.playerId);
-					jresp.putString("accessToken", socketclient.accessToken);
-					
-					Buffer buff = new Buffer();
-					buff.appendString(jresp.toString());
-					socketclient.sock.write(buff);					
-				} else {
-					// player not found ... this means that login is first time in this world, so create a player for him
-					getAccesstoken3CreatePlayer(socketclient, loginId);
-				}
-				
+		dbQuery("SELECT playerid FROM maze.players WHERE loginid_worldid = ? ")
+		.addString(loginId + "#" + getWorldId())
+		.run(new DBHandler(true) {
+			public void each(JsonObject row) {
+				socketclient.accessToken = generateMd5Id();
+				socketclient.playerId = row.getString("playerid");
+				clients.put(socketclient.playerId, socketclient);
+			
+				JsonObject jresp = new JsonObject();
+				jresp.putString("cmd", "accesstoken");
+				jresp.putString("playerId", socketclient.playerId);
+				jresp.putString("accessToken", socketclient.accessToken);
+				socketclient.write(jresp);					
+			}
+			public void notExists() {
+				getAccesstoken3CreatePlayer(socketclient, loginId);
+			}
+			public void fail(String error) {
+				clientError(socketclient, error);
 			}
 		});
 	}
@@ -564,6 +483,16 @@ public class ClientServer extends MazeServer {
 	public void clientError(SocketClient socketclient, String message) {
 		JsonObject jerr = new JsonObject();
 		jerr.putString("error", message);
+	
+		Buffer buff = new Buffer();
+		buff.appendString(jerr.toString());
+		socketclient.sock.write(buff);
+	}
+	
+	public void clientError(SocketClient socketclient, String message, int errorCode) {
+		JsonObject jerr = new JsonObject();
+		jerr.putString("error", message);
+		jerr.putNumber("errorCode", errorCode);
 	
 		Buffer buff = new Buffer();
 		buff.appendString(jerr.toString());

@@ -19,6 +19,7 @@ import org.vertx.java.core.json.JsonArray;
 import java.util.Map;
 import java.util.HashMap;
 import hu.tkrizsa.maze.MazeServer;
+import hu.tkrizsa.maze.util.DBHandler;
 
 public class PlayerServer extends MazeServer {
 
@@ -240,150 +241,74 @@ public class PlayerServer extends MazeServer {
 	
 	/* =========================================== cassandra ================================================ */
 	public void saveObject(GameObject obj) {
-		final EventBus eventBus = vertx.eventBus();
-		
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.objects (objectKey, className, objectData) VALUES (?, ?, ?)");
-		JsonArray v0 = new JsonArray();
-		v0.addString(obj.getObjectId());
-		v0.addString(obj.getClassName());
-		v0.addString(obj.getData().toString());
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {	
-				System.out.println("Cassandra reply to object save :  " + message.body());
-			}
-		});
+		dbQuery("INSERT INTO maze.objects (objectKey, className, objectData) VALUES (?, ?, ?)")
+		.addString(obj.getObjectId())
+		.addString(obj.getClassName())
+		.addString(obj.getData().toString())
+		.run();
 	}
 	
 	public void loadObjects() {
-		final EventBus eventBus = vertx.eventBus();
-		
-		JsonObject req = new JsonObject();
-		req.putString("action", "raw");
-		req.putString("statement", "SELECT * FROM maze.objects");
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				System.out.println("Cassandra reply loadObjects() " + message.body());
+		dbQuery("SELECT * FROM maze.objects")
+		.run(new DBHandler(true) {
+			public void each(JsonObject jrow) {
+				String objectKey = jrow.getString("objectkey");
+				String className = jrow.getString("classname");
+				JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
 				
-				if (!(message.body() instanceof JsonArray))
-					return;
-				
-				for (int i = 0; i < message.body().size(); i++) {
-					JsonObject jrow = message.body().get(i);
-					
-					String objectKey = jrow.getString("objectkey");
-					String className = jrow.getString("classname");
-					JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
-					
-					GameObject obj = createObjectByClassName(className);
-					if (obj == null) {
-						System.err.println("Class not found (loaded from db) : '" + (className==null?"NULL":className) + "'");
-					}
-					obj.setData(jdata);
-					objects.put(obj.getObjectId(), obj);
-					
-					// System.out.println("------------loaded object---------------");
-					// System.out.println(objectKey);
-					// System.out.println(obj.getObjectId());
-					// System.out.println(obj.getData().toString());
-					// System.out.println("------------");
-					
-				} 
+				GameObject obj = createObjectByClassName(className);
+				if (obj == null) {
+					System.err.println("Class not found (loaded from db) : '" + (className==null?"NULL":className) + "'");
+				}
+				obj.setData(jdata);
+				objects.put(obj.getObjectId(), obj);
 			}
 		});
 	}
 	
 	public void loadPlayers() {
-		final EventBus eventBus = vertx.eventBus();
-		
-		JsonObject req = new JsonObject();
-		req.putString("action", "raw");
-		req.putString("statement", "SELECT * FROM maze.players");
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				System.out.println("Cassandra reply loadPlayers() " + message.body());
-				
-				if (!(message.body() instanceof JsonArray))
-					return;
-				
-				for (int i = 0; i < message.body().size(); i++) {
-					JsonObject jrow = message.body().get(i);
-					
-					String loginId = jrow.getString("loginid");
-					String playerId = jrow.getString("playerid");
-					//JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
-					Player obj = new Player(loginId, playerId);
-					obj.playerName = jrow.getString("playername");
-					players.put(playerId, obj);
-					
-					// System.out.println("------------loaded object---------------");
-					// System.out.println(objectKey);
-					// System.out.println(obj.getObjectId());
-					// System.out.println(obj.getData().toString());
-					// System.out.println("------------");
-					
-				} 
+		dbQuery("SELECT * FROM maze.players")
+		.run(new DBHandler(true) {
+			@Override
+			public void each(JsonObject jrow) {
+				String loginId = jrow.getString("loginid");
+				String playerId = jrow.getString("playerid");
+				//JsonObject jdata = new JsonObject(jrow.getString("objectdata"));
+				Player obj = new Player(loginId, playerId);
+				obj.playerName = jrow.getString("playername");
+				players.put(playerId, obj);
 			}
 		});
 	}
 
 	public void loadLogin(final String loginId, final Handler<JsonObject> callHandler)  {
-		final EventBus eventBus = vertx.eventBus();
-
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "SELECT * FROM maze.logins WHERE loginId = ?");
-		JsonArray v0 = new JsonArray();
-		v0.addString(loginId);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);	
-	
-		eventBus.send("cassandra", req, new Handler<Message<JsonArray>>() {
-			public void handle(Message<JsonArray> message) {
-				System.out.println("Cassandra reply loadLogin() " + message.body());
-				
-				if (!(message.body() instanceof JsonArray)) {
-					callHandler.handle(null);
-				}
-				if (message.body().size() != 1) {
-					callHandler.handle(null);
-				}
-				callHandler.handle((JsonObject)message.body().get(0));
+		dbQuery("SELECT * FROM maze.logins WHERE loginId = ?")
+		.addString(loginId)
+		.run(new DBHandler(true) {
+			@Override
+			public void each(JsonObject jrow) {
+				callHandler.handle(jrow);
+			}
+			@Override
+			public void notExistsOrFail() {
+				callHandler.handle(null);
 			}
 		});
-	
 	}
 	
 	public void savePlayer(final Player player, final Handler<JsonObject> callHandler) {
-		final EventBus eventBus = vertx.eventBus();
-		
-		JsonObject req = new JsonObject();
-		req.putString("action", "prepared");
-		req.putString("statement", "INSERT INTO maze.players (playerid, loginid_worldid, playername) VALUES (?, ?, ?)");
-		JsonArray v0 = new JsonArray();
-		v0.addString(player.playerId);
-		v0.addString(player.loginId + "#" + getWorldId());
-		v0.addString(player.playerName);
-		JsonArray values = new JsonArray();
-		values.addArray(v0);
-		req.putArray("values", values);
-		
-		
-		eventBus.send("cassandra", req, new Handler<Message<JsonObject>>() {
-			public void handle(Message<JsonObject> message) {	
-				System.out.println("Cassandra reply to player save :  " + message.body());
-				callHandler.handle(message.body());
+		dbQuery("INSERT INTO maze.players (playerid, loginid_worldid, playername) VALUES (?, ?, ?)")
+		.addString(player.playerId)
+		.addString(player.loginId + "#" + getWorldId())
+		.addString(player.playerName)
+		.run(new DBHandler(false) {
+			@Override
+			public void success() {
+				callHandler.handle(joSuccess());
+			}
+			@Override
+			public void fail(JsonObject jerror) {
+				callHandler.handle(jerror);
 			}
 		});
 	}	

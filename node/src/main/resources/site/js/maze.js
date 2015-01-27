@@ -838,5 +838,5 @@ Maze.prototype.readCookie = function(name) {
 }
 
 Maze.prototype.eraseCookie = function(name) {
-    createCookie(name,"",-1);
+    this.createCookie(name,"",-1);
 }

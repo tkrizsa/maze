@@ -240,6 +240,15 @@ Maze.Server.prototype.processResponse = function(data) {
 	}
 	
 	if (data.error) {
+		switch (data.errorCode) {
+			case 100 : 
+				delete this.maze.sessionId;
+				this.maze.eraseCookie("sessionid");
+				window.location.href = "/";
+				return;
+			break;
+		
+		}
 		alert("Server : " + data.error);
 		return;
 		

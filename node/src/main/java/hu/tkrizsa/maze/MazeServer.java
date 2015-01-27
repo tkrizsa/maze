@@ -4,6 +4,8 @@ import org.vertx.java.platform.Verticle;
 import org.vertx.java.core.eventbus.EventBus;
 import hu.tkrizsa.maze.util.SimpleFlake;
 import hu.tkrizsa.maze.util.IdGenerator;
+import hu.tkrizsa.maze.util.DBHandler;
+import hu.tkrizsa.maze.util.DBQuery;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.json.JsonArray;
 
@@ -77,6 +79,39 @@ public class MazeServer extends Verticle {
 	public String generateMd5Id() {
 		return md5gen.generateId(32);
 	}
+	
+	
+	/* ========================= CASSANDRA ===================================== */
+	
+	public DBQuery dbQuery(String statement) {
+		return new DBQuery(this, statement);
+	}
+	
+	/*
+	public void dbQuery(String statement, Object[] args, DBHandler handler) {
+		JsonObject req = new JsonObject();
+		req.putString("action", "prepared");
+		req.putString("statement", statement);
+		JsonArray v0 = new JsonArray();
+		
+		for (int i = 0; i < args.length; i++) {
+			v0.addString(args[i].toString());
+		}
+		
+		
+		
+		JsonArray values = new JsonArray();
+		values.addArray(v0);
+		req.putArray("values", values);
+		
+		final DBQuery thisQuery = this;
+		
+		eventBus.send("cassandra", req, handler);	
+	
+	
+	
+	}
+	*/
 	
 
 }

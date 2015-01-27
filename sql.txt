@@ -1,6 +1,6 @@
 
 
-CREATE TABLE sections (key text primary key, items text);
+CREATE TABLE sections (key text primary key, plainid text, map text);
 
 CREATE TABLE plains (plainid text primary key, info map<text,text>);
 INSERT INTO plains (plainId, info) VALUES ('earth', {'left' : '-2000', 'right' : '2000', 'top' : '-2000', 'bottom':'2000', 'defaultFloor' : 'GrassFloor'});

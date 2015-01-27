@@ -127,6 +127,18 @@
 				return;
 			}
 			if (data.error) {
+				switch (data.errorCode) {
+					case 100 : 
+						sessionId = null;
+						userName = "";
+						eraseCookie("sessionid");
+						$(".maze-main-page").hide();
+						$("#maze-login-form").fadeIn();
+						return;
+					break;
+				}
+			
+			
 				alert(data.error);
 				return;
 			}
@@ -141,8 +153,9 @@
 				$(".maze-main-page").hide();
 				$("#maze-welcome").fadeIn();
 			} else if (data.logout) {
-				eraseCookie("sessionid");
+				sessionId = null;
 				userName = "";
+				eraseCookie("sessionid");
 				$(".maze-main-page").hide();
 				$("#maze-login-form").fadeIn();
 			}
